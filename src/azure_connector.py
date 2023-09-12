@@ -18,7 +18,7 @@ class _AzureConnector(_CloudConnector):
     @staticmethod
     def _connect_to_cluster():
         return ContainerServiceClient(
-            DefaultAzureCredential(), AzureConfig.SUBSCRIPTION_ID
+            DefaultAzureCredential(), AzureConfig.SUBSCRIPTION
         )
 
     def scale_node_pool_to_zero(self):
