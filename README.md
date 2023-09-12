@@ -1,6 +1,6 @@
 # Azure AKS Scaler
 
-![AKS Scaling](assets/amandawang.png)
+![AKS Scaling](assets/featured.aks-lab-logo.png)
 
 ## Setting Workload Identity
 
