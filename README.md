@@ -1,5 +1,7 @@
 # Azure AKS Scaler
 
+![AKS Scaling](assets/amandawang.png)
+
 ## Setting Workload Identity
 
 > [Tutorial: Use a workload identity with an application on Azure Kubernetes Service (AKS)](https://learn.microsoft.com/en-us/azure/aks/learn/tutorial-kubernetes-workload-identity)
