@@ -1,10 +1,8 @@
 # Azure AKS Scaler
 
-### Setting Workload Identity
+## Setting Workload Identity
 
 > [Tutorial: Use a workload identity with an application on Azure Kubernetes Service (AKS)](https://learn.microsoft.com/en-us/azure/aks/learn/tutorial-kubernetes-workload-identity)
-
-
 
 ### Create an OpenID Connect provider on Azure Kubernetes Service (AKS)
 > [Create an OpenID Connect provider on Azure Kubernetes Service (AKS)](https://learn.microsoft.com/en-us/azure/aks/use-oidc-issuer)
