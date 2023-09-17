@@ -2,31 +2,29 @@
 
 <span style="font-family:Papyrus; font-size:3em;">Azure AKS Scaler</span>
 ## Setting Azure Kubernetes Service (AKS) Workload Identity
-> Azure Kubernetes Service (AKS) Workload Identity is a feature that allows Kubernetes pods to authenticate with Azure services using their own identities, instead of using a service principal. This provides a more secure and streamlined way to access Azure resources from within a Kubernetes cluster.
-
+> Azure Kubernetes Service (AKS) Workload Identity is a feature that allows Kubernetes pods to authenticate with Azure services using their own identities, instead of using a service principal. This provides a more secure and streamlined way to access Azure resources from within a Kubernetes cluster.  
+>
 > **Based On**:
 > [Tutorial: Use a workload identity with an application on Azure Kubernetes Service (AKS)](https://learn.microsoft.com/en-us/azure/aks/learn/tutorial-kubernetes-workload-identity)
-
+ 
 ### Agenda
-&nbsp;&nbsp;&nbsp;&nbsp;[A. Export environmental variables](#first)
-
-&nbsp;&nbsp;&nbsp;&nbsp;[B. Create an OpenID Connect provider on Azure Kubernetes Service (AKS)](#second)
-
-&nbsp;&nbsp;&nbsp;&nbsp;[C. Create a managed identity and grant permissions to access AKS control plane](#third)
+&nbsp;&nbsp;&nbsp;&nbsp;[A. Export environmental variables](#first)  
+&nbsp;&nbsp;&nbsp;&nbsp;[B. Create an OpenID Connect provider on Azure Kubernetes Service (AKS)](#second)  
+&nbsp;&nbsp;&nbsp;&nbsp;[C. Create a managed identity and grant permissions to access AKS control plane](#third)  
 
 
 ---
 #### <a name="first"></a>A. Prepare the environment
 
 ###### Export environmental variables
-`export RESOURCE_GROUP="myResourceGroup" \`
-`export LOCATION="westcentralus" \`
-`export CLUSTER_NAME="myManagedCluster" \`
-`export SERVICE_ACCOUNT_NAMESPACE="default" \`
-`export SERVICE_ACCOUNT_NAME="workload-identity-sa" \`
-`export SUBSCRIPTION="$(az account show --query id --output tsv)" \`
-`export USER_ASSIGNED_IDENTITY_NAME="userIdentity" \`
-`export FEDERATED_IDENTITY_CREDENTIAL_NAME="scalerFedIdentity"`
+`export RESOURCE_GROUP="myResourceGroup" \`  
+`export LOCATION="westcentralus" \`  
+`export CLUSTER_NAME="myManagedCluster" \`  
+`export SERVICE_ACCOUNT_NAMESPACE="default" \`  
+`export SERVICE_ACCOUNT_NAME="workload-identity-sa" \`  
+`export SUBSCRIPTION="$(az account show --query id --output tsv)" \`  
+`export USER_ASSIGNED_IDENTITY_NAME="userIdentity" \`  
+`export FEDERATED_IDENTITY_CREDENTIAL_NAME="scalerFedIdentity"`  
 
 #### <a name="second"></a>B. Create an OpenID Connect provider on Azure Kubernetes Service (AKS)
 > [OpenID Connect (OIDC)](https://learn.microsoft.com/en-us/azure/active-directory/fundamentals/auth-oidc) extends OAuth 2.0 for authentication via Azure AD. It enables SSO on Azure Kubernetes Service (AKS) using an ID token. AKS can automatically rotate keys or do it manually. Token lifetime is one day.
