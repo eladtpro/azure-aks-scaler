@@ -3,12 +3,15 @@
 <span style="font-family:Papyrus; font-size:3em;">Azure AKS Scaler</span>
 ## Setting Azure Kubernetes Service (AKS) Workload Identity
 > Azure Kubernetes Service (AKS) Workload Identity is a feature that allows Kubernetes pods to authenticate with Azure services using their own identities, instead of using a service principal. This provides a more secure and streamlined way to access Azure resources from within a Kubernetes cluster.
+
 > **Based On**:
 > [Tutorial: Use a workload identity with an application on Azure Kubernetes Service (AKS)](https://learn.microsoft.com/en-us/azure/aks/learn/tutorial-kubernetes-workload-identity)
 
 ### Agenda
 &nbsp;&nbsp;&nbsp;&nbsp;[A. Export environmental variables](#first)
+
 &nbsp;&nbsp;&nbsp;&nbsp;[B. Create an OpenID Connect provider on Azure Kubernetes Service (AKS)](#second)
+
 &nbsp;&nbsp;&nbsp;&nbsp;[C. Create a managed identity and grant permissions to access AKS control plane](#third)
 
 
