@@ -128,7 +128,9 @@ EOF`
 #### <a name="sixth"></a>F. Deploy the workload  
 
 1. Deploy a pod that references the service account created in the previous step using the following command.
-```cat <<EOF | kubectl apply -f -
+
+```
+cat <<EOF | kubectl apply -f -
 apiVersion: v1
 kind: Pod
 metadata:
@@ -139,16 +141,23 @@ metadata:
 spec:
   serviceAccountName: ${SERVICE_ACCOUNT_NAME}
   containers:
-    image: ghcr.io/azure/azure-workload-identity/msal-go
+    - image: ghcr.io/azure/azure-workload-identity/msal-go
       name: oidc
       env:
-      - name: KEYVAULT_URL
-        value: ${KEYVAULT_URL}
-      - name: SECRET_NAME
-        value: ${KEYVAULT_SECRET_NAME}
+      - name: SUBSCRIPTION
+        value: ${SUBSCRIPTION}
+      - name: NODE_POOLS_AMOUNT
+        value: { "manualpool2": 5, "manualpool3": 5 }
+      - name: RESOURCE_GROUP
+        value: ${RESOURCE_GROUP}
+      - name: LOCATION
+        value: ${LOCATION}
+      - name: CLUSTER_NAME
+        value: ${CLUSTER_NAME}
   nodeSelector:
     kubernetes.io/os: linux
-EOF```
+EOF
+```
 
 
 ---
