@@ -1,12 +1,18 @@
 ![AKS Scaling](assets/Azure-Kubernetes-Service.jpg)
 
 <span style="font-family:Papyrus; font-size:3em;">Azure AKS Scaler</span>
-## Setting Azure Kubernetes Service (AKS) Workload Identity
+## Azure Kubernetes Service (AKS) Workload Identity
 > Azure Kubernetes Service (AKS) Workload Identity is a feature that allows Kubernetes pods to authenticate with Azure services using their own identities, instead of using a service principal. This provides a more secure and streamlined way to access Azure resources from within a Kubernetes cluster.  
 >
 > **Based On**:
 > [Tutorial: Use a workload identity with an application on Azure Kubernetes Service (AKS)](https://learn.microsoft.com/en-us/azure/aks/learn/tutorial-kubernetes-workload-identity)
- 
+
+### How does Workload Identity works
+In this security model, the AKS cluster acts as token issuer, Azure Active Directory uses OpenID Connect to discover public signing keys and verify the authenticity of the service account token before exchanging it for an Azure AD token. Your workload can exchange a service account token projected to its volume for an Azure AD token using the Azure Identity client library or the Microsoft Authentication Library.
+
+[![AKS Scaling](assets/aks-workload-identity-model.png)](https://learn.microsoft.com/en-us/azure/aks/workload-identity-overview?tabs=python)
+
+
 ### Agenda
 
 &nbsp;&nbsp;&nbsp;&nbsp;[A. Export environmental variables](#first)  
@@ -14,6 +20,9 @@
 &nbsp;&nbsp;&nbsp;&nbsp;[C. Create a managed identity and grant permissions to access AKS control plane](#third)  
 &nbsp;&nbsp;&nbsp;&nbsp;[D. Create Kubernetes service account](#forth)  
 &nbsp;&nbsp;&nbsp;&nbsp;[E. Establish federated identity credential](#fifth)  
+&nbsp;&nbsp;&nbsp;&nbsp;[F. Deploy the workload](#sixth)  
+
+
 
 
 ##### Prerequisites
@@ -115,6 +124,32 @@ EOF`
 `az identity federated-credential create --name ${FEDERATED_IDENTITY_CREDENTIAL_NAME} --identity-name ${USER_ASSIGNED_IDENTITY_NAME} --resource-group ${RESOURCE_GROUP} --issuer ${AKS_OIDC_ISSUER} --subject system:serviceaccount:${SERVICE_ACCOUNT_NAMESPACE}:${SERVICE_ACCOUNT_NAME}`
 ***Output:*** The variable should contain the *Issuer URL* similar to the following example, By default, the Issuer is set to use the base URL https://{region}.oic.prod-aks.azure.com, where the value for {region} matches the location the AKS cluster is deployed in:
 <span>https://eastus.oic.prod-aks.azure.com/00000000-0000-0000-0000-000000000000/00000000-0000-0000-0000-000000000000/</span>
+
+#### <a name="sixth"></a>F. Deploy the workload  
+
+1. Deploy a pod that references the service account created in the previous step using the following command.
+```cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: Pod
+metadata:
+  name: quick-start
+  namespace: ${SERVICE_ACCOUNT_NAMESPACE}
+  labels:
+    azure.workload.identity/use: "true"
+spec:
+  serviceAccountName: ${SERVICE_ACCOUNT_NAME}
+  containers:
+    image: ghcr.io/azure/azure-workload-identity/msal-go
+      name: oidc
+      env:
+      - name: KEYVAULT_URL
+        value: ${KEYVAULT_URL}
+      - name: SECRET_NAME
+        value: ${KEYVAULT_SECRET_NAME}
+  nodeSelector:
+    kubernetes.io/os: linux
+EOF```
+
 
 ---
 
