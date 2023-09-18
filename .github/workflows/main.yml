@@ -57,11 +57,15 @@ jobs:
               version: 'latest' # default is latest stable
           id: install
         - name: create subscription-secret
-          run: kubectl create secret generic subscription-secret --from-literal=subscription='${{ secrets.SUBSCRIPTION  }}' --namespace=${{ vars.SERVICE_ACCOUNT_NAMESPACE }}
+          run: |
+            if kubectl get secret subscription-secret -n ${{ vars.SERVICE_ACCOUNT_NAMESPACE }} >/dev/null 2>&1; then
+              echo "Secret subscription-secret already exists"
+            else
+              kubectl create secret generic subscription-secret --from-literal=subscription='${{ secrets.SUBSCRIPTION }}' --namespace=${{ vars.SERVICE_ACCOUNT_NAMESPACE }}
+            fi
         - name: create aks-scaler-configmap
           run: |
             kubectl create configmap aks-scaler-configmap \
-              --from-literal=subscription='${{ secrets.SUBSCRIPTION }}' \
               --from-literal=resource-group='${{ vars.RESOURCE_GROUP }}' \
               --from-literal=location='${{ vars.LOCATION }}' \
               --from-literal=cluster-name='${{ vars.CLUSTER_NAME }}' \
