@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: aks-scaler-deployment
-  namespace: ${SERVICE_ACCOUNT_NAMESPACE}
+  namespace: ${{ vars.SERVICE_ACCOUNT_NAMESPACE }}
   labels:
     azure.workload.identity/use: "true"
 spec:
@@ -21,14 +21,14 @@ spec:
           name: oidc
           env:
           - name: SUBSCRIPTION
-            value: ${SUBSCRIPTION}
+            value: ${{ secrets.SUBSCRIPTION }}
           - name: NODE_POOLS_AMOUNT
-            value: "{ \"manualpool2\": 5, \"manualpool3\": 5 }"
+            value: ${{ vars.NODE_POOLS_AMOUNT }}
           - name: RESOURCE_GROUP
-            value: ${RESOURCE_GROUP}
+            value: ${{ vars.RESOURCE_GROUP }}
           - name: LOCATION
-            value: ${LOCATION}
+            value: ${{ vars.LOCATION }}
           - name: CLUSTER_NAME
-            value: ${CLUSTER_NAME}
+            value: ${{ vars.CLUSTER_NAME }}
       nodeSelector:
         kubernetes.io/os: linux

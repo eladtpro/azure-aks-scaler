@@ -10,7 +10,7 @@
 ### How does Workload Identity works
 In this security model, the AKS cluster acts as token issuer, Azure Active Directory uses OpenID Connect to discover public signing keys and verify the authenticity of the service account token before exchanging it for an Azure AD token. Your workload can exchange a service account token projected to its volume for an Azure AD token using the Azure Identity client library or the Microsoft Authentication Library.
 
-[![AKS Scaling](assets/aks-workload-identity-model.png)](https://learn.microsoft.com/en-us/azure/aks/workload-identity-overview?tabs=python)
+[![AKS Workload Identity Overview](assets/aks-workload-identity-model.png)](https://learn.microsoft.com/en-us/azure/aks/workload-identity-overview?tabs=python)
 
 
 ### Agenda
@@ -243,6 +243,13 @@ The output includes credentials that you must protect. Be sure that you do not i
    `kubectl config current-context`
    2. Getting the config value:
    `kubectl config view --minify --flatten --context=<CONTEXT_NAME>`
+
+4. GitHub Action Variables, GitHub sets default variables for each GitHub Actions workflow run. You can also set custom variables for use in a single workflow or multiple workflows.
+> Variables provide a way to store and reuse non-sensitive configuration information. You can store any configuration data such as compiler flags, usernames, or server names as variables. Variables are interpolated on the runner machine that runs your workflow. Commands that run in actions or workflow steps can create, read, and modify variables.
+
+Variables can be accessed using the *vars* kewords, e.g *vars.RESOURCE_GROUP*, complete exsample in the action (workflow) file [main.yaml](https://github.com/eladtpro/azure-aks-scaler/blob/main/.github/workflows/main.yml)
+![AKS Scaling](assets/github-repo-vars.png)
+
 
 ---
 
