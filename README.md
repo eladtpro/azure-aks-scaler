@@ -161,7 +161,7 @@ cat <<EOF | kubectl apply -f -
 apiVersion: v1
 kind: Pod
 metadata:
-  name: quick-start
+  name: aks-scaler
   namespace: ${SERVICE_ACCOUNT_NAMESPACE}
   labels:
     azure.workload.identity/use: "true"
@@ -174,7 +174,7 @@ spec:
       - name: SUBSCRIPTION
         value: ${SUBSCRIPTION}
       - name: NODE_POOLS_AMOUNT
-        value: { "manualpool2": 5, "manualpool3": 5 }
+        value: "{ \"manualpool2\": 5, \"manualpool3\": 5 }"
       - name: RESOURCE_GROUP
         value: ${RESOURCE_GROUP}
       - name: LOCATION
