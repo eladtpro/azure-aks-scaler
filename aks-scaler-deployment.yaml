@@ -15,9 +15,9 @@ spec:
       labels:
         app: aks-scaler
     spec:
-      serviceAccountName: ${{vars.SERVICE_ACCOUNT_NAMESPACE}}
+      serviceAccountName: default # HACK: should be replaced in helm values files ${{vars.SERVICE_ACCOUNT_NAMESPACE}}
       containers:
-        - image: ${{ vars.CONTAINER_REGISTRY }}.azurecr.io/aks-skaler:latest
+        - image: acr4aksregistry.azurecr.io/aks-skaler:latest # HACK: should be replaced in helm values files ${{vars.CONTAINER_REGISTRY}}
           name: oidc
           env:
           - name: SUBSCRIPTION

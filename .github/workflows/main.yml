@@ -76,18 +76,3 @@ jobs:
             manifests: ${{ vars.DEPLOYMENT_MANIFEST_PATH }}
             images: |
               ${{ vars.CONTAINER_REGISTRY }}.azurecr.io/${{ vars.CONTAINER_NAME }}:latest
-
-
-
-
-
-              
-      # ${{ vars.CONTAINER_REGISTRY }}.azurecr.io/${{ env.CONTAINER_NAME }}:${{ github.sha }}
-
-
-      # - name: Set up kubectl
-      #   uses: azure/setup-kubectl@v1
-      #   with:
-      #     kubeconfig: ${{ secrets.KUBECONFIG }}
-      # - name: Deploy to AKS
-      #   run: kubectl apply -f aks-scaler-deployment.yaml
