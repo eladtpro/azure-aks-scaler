@@ -63,14 +63,19 @@ jobs:
             else
               kubectl create secret generic subscription-secret --from-literal=subscription='${{ secrets.SUBSCRIPTION }}' --namespace=${{ vars.SERVICE_ACCOUNT_NAMESPACE }}
             fi
+
         - name: create aks-scaler-configmap
           run: |
-            kubectl create configmap aks-scaler-configmap \
-              --from-literal=resource-group='${{ vars.RESOURCE_GROUP }}' \
-              --from-literal=location='${{ vars.LOCATION }}' \
-              --from-literal=cluster-name='${{ vars.CLUSTER_NAME }}' \
-              --from-literal=node-pools-amount='${{ vars.NODE_POOLS_AMOUNT }}' \
-              --namespace=${{ vars.SERVICE_ACCOUNT_NAMESPACE }}
+            if kubectl get configmap aks-scaler-configmap -n ${{ vars.SERVICE_ACCOUNT_NAMESPACE }} >/dev/null 2>&1; then
+              echo "ConfigMap aks-scaler-configmap already exists"
+            else
+              kubectl create configmap aks-scaler-configmap \
+                --from-literal=resource-group='${{ vars.RESOURCE_GROUP }}' \
+                --from-literal=location='${{ vars.LOCATION }}' \
+                --from-literal=cluster-name='${{ vars.CLUSTER_NAME }}' \
+                --from-literal=node-pools-amount='${{ vars.NODE_POOLS_AMOUNT }}' \
+                --namespace=${{ vars.SERVICE_ACCOUNT_NAMESPACE }}
+            fi            
 
         # Deploys application based on given manifest file
         - name: Deploys application
