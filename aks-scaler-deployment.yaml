@@ -15,9 +15,9 @@ spec:
       labels:
         app: aks-scaler
     spec:
-      serviceAccountName: ${SERVICE_ACCOUNT_NAME}
+      serviceAccountName: ${{vars.SERVICE_ACCOUNT_NAMESPACE}}
       containers:
-        - image: ${ACR_NAME}.azurecr.io/aks-skaler:latest
+        - image: ${{ vars.CONTAINER_REGISTRY }}.azurecr.io/aks-skaler:latest
           name: oidc
           env:
           - name: SUBSCRIPTION
