@@ -22,6 +22,8 @@ In this security model, the AKS cluster acts as token issuer, Azure Active Direc
 &nbsp;&nbsp;&nbsp;&nbsp;[E. Establish federated identity credential](#fifth)  
 &nbsp;&nbsp;&nbsp;&nbsp;[F. Prepare the container image](#sixth)  
 &nbsp;&nbsp;&nbsp;&nbsp;[G. Deploy the workload](#seventh)  
+&nbsp;&nbsp;&nbsp;&nbsp;[G.a. Deploy using GitHub action](#seventha)  
+
 
 
 ##### Prerequisites
@@ -117,17 +119,18 @@ metadata:
     azure.workload.identity/client-id: ${USER_ASSIGNED_CLIENT_ID}
   name: ${SERVICE_ACCOUNT_NAME}
   namespace: ${SERVICE_ACCOUNT_NAMESPACE}
-EOF`
+EOF`  
 ***Output:*** 
-`Serviceaccount/workload-identity-sa created`  
+    `Serviceaccount/workload-identity-sa created`  
 
 #### <a name="fifth"></a>E. Establish federated identity credential  
 1. Get the OIDC Issuer URL and save it to an environmental variable using the following command. Replace the default value for the arguments -n, which is the name of the cluster.  
 `export AKS_OIDC_ISSUER="$(az aks show -n "${CLUSTER_NAME}" -g "${RESOURCE_GROUP}" --query "oidcIssuerProfile.issuerUrl" -otsv)"`
 2. Create the federated identity credential between the managed identity, service account issuer, and subject using the [az identity federated-credential create](https://learn.microsoft.com/en-us/cli/azure/identity/federated-credential#az-identity-federated-credential-create) command.
-`az identity federated-credential create --name ${FEDERATED_IDENTITY_CREDENTIAL_NAME} --identity-name ${USER_ASSIGNED_IDENTITY_NAME} --resource-group ${RESOURCE_GROUP} --issuer ${AKS_OIDC_ISSUER} --subject system:serviceaccount:${SERVICE_ACCOUNT_NAMESPACE}:${SERVICE_ACCOUNT_NAME}`
-***Output:*** The variable should contain the *Issuer URL* similar to the following example, By default, the Issuer is set to use the base URL https://{region}.oic.prod-aks.azure.com, where the value for {region} matches the location the AKS cluster is deployed in:
-<span>https://eastus.oic.prod-aks.azure.com/00000000-0000-0000-0000-000000000000/00000000-0000-0000-0000-000000000000/</span>
+`az identity federated-credential create --name ${FEDERATED_IDENTITY_CREDENTIAL_NAME} --identity-name ${USER_ASSIGNED_IDENTITY_NAME} --resource-group ${RESOURCE_GROUP} --issuer ${AKS_OIDC_ISSUER} --subject system:serviceaccount:${SERVICE_ACCOUNT_NAMESPACE}:${SERVICE_ACCOUNT_NAME}`  
+***Output:***  
+The variable should contain the *Issuer URL* similar to the following example, By default, the Issuer is set to use the base URL https://{region}.oic.prod-aks.azure.com, where the value for {region} matches the location the AKS cluster is deployed in:
+    <span>https://eastus.oic.prod-aks.azure.com/00000000-0000-0000-0000-000000000000/00000000-0000-0000-0000-000000000000/</span>
 
 #### <a name="sixth"></a>F. Prepare the container image  
 1. Configure ACR integration for an existing AKS cluster, Attach an ACR to an existing AKS cluster.
@@ -155,36 +158,6 @@ az acr build --image aks-skaler:latest --registry ${ACR_NAME} --file Dockerfile 
 #### <a name="seventh"></a>G. Deploy the workload  
 
 1. Deploy a pod that references the service account created in the previous step using the following command.
-
-```
-cat <<EOF | kubectl apply -f -
-apiVersion: v1
-kind: Pod
-metadata:
-  name: aks-scaler
-  namespace: ${SERVICE_ACCOUNT_NAMESPACE}
-  labels:
-    azure.workload.identity/use: "true"
-spec:
-  serviceAccountName: ${SERVICE_ACCOUNT_NAME}
-  containers:
-    - image: ${ACR_NAME}.azurecr.io/aks-skaler:latest
-      name: oidc
-      env:
-      - name: SUBSCRIPTION
-        value: ${SUBSCRIPTION}
-      - name: NODE_POOLS_AMOUNT
-        value: "{ \"manualpool2\": 5, \"manualpool3\": 5 }"
-      - name: RESOURCE_GROUP
-        value: ${RESOURCE_GROUP}
-      - name: LOCATION
-        value: ${LOCATION}
-      - name: CLUSTER_NAME
-        value: ${CLUSTER_NAME}
-  nodeSelector:
-    kubernetes.io/os: linux
-EOF
-```
 
 ```
 cat <<EOF | kubectl apply -f -
@@ -226,6 +199,50 @@ spec:
 EOF
 ```
 
+#### <a name="seventha"></a>G.a. Deploy using GitHub action    
+> The Deploy to AKS (main.yaml) GitHub Action that uses the [aks-scaler-deployment.yaml](https://github.com/eladtpro/azure-aks-scaler/blob/main/.github/workflows/main.yml) file to deploy to an Azure AKS cluster:
+>
+> This GitHub Action is triggered on pushes to the main branch. It checks out the code, logs in to Azure using the AZURE_CREDENTIALS secret, sets up kubectl using the KUBECONFIG secret, and then deploys the aks-scaler-deployment.yaml file to the AKS cluster using kubectl apply.
+>
+> To use this GitHub Action, you'll need to create the AZURE_CREDENTIALS and KUBECONFIG secrets in your repository. The AZURE_CREDENTIALS secret should contain your Azure service principal credentials in JSON format, and the KUBECONFIG secret should contain the contents of your Kubernetes configuration file.
+
+1. You can create these secrets in your repository by going to the "Settings" tab, clicking on "Secrets", and then clicking on "New repository secret".
+To create the *AZURE_CREDENTIALS* and KUBECONFIG secrets in your GitHub repository, you can follow these steps:
+     1. Open your GitHub repository in a web browser.
+     2. Click on the "Settings" tab.
+     3. Click on "Secrets" in the left-hand menu.
+     4. Click on "New repository secret".
+     5. In the "Name" field, enter *AZURE_CREDENTIALS*.
+     6. In the "Value" field, paste the contents of your Azure service principal credentials JSON file.
+     7. Click on "Add secret".
+     8. Click on "New repository secret" again.
+     9. In the "Name" field, enter *KUBECONFIG*.
+     10. In the "Value" field, paste the contents of your Kubernetes configuration file.
+     11. Click on "Add secret".
+2. Get the *AZURE_CREDENTIALS* value, We will create a service principal and configure its access to Azure resources using the [az ad sp create-for-rbac](https://learn.microsoft.com/en-us/cli/azure/ad/sp?view=azure-cli-latest#az-ad-sp-create-for-rbac()).
+The output includes credentials that you must protect. Be sure that you do not include these credentials in your code or check the credentials into your source control. As an alternative, consider using managed identities if available to avoid the need to use credentials.  
+`az ad sp create-for-rbac --name aks-scaler --role contributor --scopes /subscriptions/${SUBSCRIPTION}/resourceGroups/${RESOURCE_GROUP}`  
+***Output:***  
+    ```
+    {
+      "clientId": "00000000-0000-0000-0000-000000000000",
+      "clientSecret": "<SECRET>",
+      "subscriptionId": "00000000-0000-0000-0000-000000000000",
+      "tenantId": "00000000-0000-0000-0000-000000000000",
+      "activeDirectoryEndpointUrl": "https://login.microsoftonline.com",
+      "resourceManagerEndpointUrl": "https://management.azure.com/",
+      "activeDirectoryGraphResourceId": "https://graph.windows.net/",
+      "sqlManagementEndpointUrl": "https://management.core.windows.net:8443/",
+      "galleryEndpointUrl": "https://gallery.azure.com/",
+      "managementEndpointUrl": "https://management.core.windows.net/"
+    }
+    ```
+
+3. Get the *KUBECONFIG* secret value
+   1. First, get the context name:  
+   `kubectl config current-context`
+   2. Getting the config value:
+   `kubectl config view --minify --flatten --context=<CONTEXT_NAME>`
 
 ---
 

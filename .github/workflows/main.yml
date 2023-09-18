@@ -6,22 +6,57 @@ on:
       - main
 
 jobs:
-  deploy:
+  checkoutAndBuildImage:
     runs-on: ubuntu-latest
-
+    permissions:
+        contents: read
+        id-token: write
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+        - uses: actions/checkout@v3
+        - name: 'Login via Azure CLI'
+          uses: azure/login@v1
+          with:
+            creds: ${{ secrets.AZURE_CREDENTIALS }}
+        - name: acr login
+          run: az acr login --name ${{ vars.CONTAINER_REGISTRY }} --expose-token
+        - name: Build and push checkout image to ACR (${{ vars.CONTAINER_REGISTRY }})
+          run: az acr build --image aks-skaler:latest --registry ${{ vars.CONTAINER_REGISTRY }} --file Dockerfile .
 
-    - name: Login to Azure
-      uses: azure/login@v1
-      with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}
+  deployToAKS:
+    runs-on: ubuntu-latest
+    needs: checkoutAndBuildImage
+    steps:
+      # Use kubelogin to configure your kubeconfig for Azure auth
+      - name: Set up kubelogin for non-interactive login
+        uses: azure/use-kubelogin@v1
+        with:
+          kubelogin-version: 'v0.0.25'
 
-    - name: Set up kubectl
-      uses: azure/setup-kubectl@v1
-      with:
-        kubeconfig: ${{ secrets.KUBECONFIG }}
+      # Retrieves your Azure Kubernetes Service cluster's kubeconfig file
+      - name: Get K8s context
+        uses: azure/aks-set-context@v3
+        with:
+          resource-group: ${{ vars.RESOURCE_GROUP }}
+          cluster-name: ${{ vars.CLUSTER_NAME }}
+          admin: 'false'
+          use-kubelogin: 'true'
 
-    - name: Deploy to AKS
-      run: kubectl apply -f aks-scaler-deployment.yaml
+      # Deploys application based on given manifest file
+      - name: Deploys application
+        uses: Azure/k8s-deploy@v4
+        with:
+          action: deploy
+          manifests: ${{ vars.DEPLOYMENT_MANIFEST_PATH }}
+          images: |
+            ${{ vars.CONTAINER_REGISTRY }}.azurecr.io/${{ vars.CONTAINER_NAME }}:latest
+
+
+      # ${{ vars.CONTAINER_REGISTRY }}.azurecr.io/${{ env.CONTAINER_NAME }}:${{ github.sha }}
+
+
+      # - name: Set up kubectl
+      #   uses: azure/setup-kubectl@v1
+      #   with:
+      #     kubeconfig: ${{ secrets.KUBECONFIG }}
+      # - name: Deploy to AKS
+      #   run: kubectl apply -f aks-scaler-deployment.yaml
