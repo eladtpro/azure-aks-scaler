@@ -21,14 +21,29 @@ spec:
           name: oidc
           env:
           - name: SUBSCRIPTION
-            value: ${{ secrets.SUBSCRIPTION }}
+            valueFrom:
+              secretKeyRef:
+                name: subscription-secret
+                key: subscription
           - name: NODE_POOLS_AMOUNT
-            value: ${{ vars.NODE_POOLS_AMOUNT }}
+            valueFrom:
+              secretKeyRef:
+                name: node-pools-amount-secret
+                key: node-pools-amount
           - name: RESOURCE_GROUP
-            value: ${{ vars.RESOURCE_GROUP }}
+            valueFrom:
+              secretKeyRef:
+                name: resource-group-secret
+                key: resource-group
           - name: LOCATION
-            value: ${{ vars.LOCATION }}
+            valueFrom:
+              secretKeyRef:
+                name: location-secret
+                key: location
           - name: CLUSTER_NAME
-            value: ${{ vars.CLUSTER_NAME }}
+            valueFrom:
+              secretKeyRef:
+                name: cluster-name-secret
+                key: cluster-name
       nodeSelector:
         kubernetes.io/os: linux
