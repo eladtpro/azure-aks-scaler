@@ -186,6 +186,46 @@ spec:
 EOF
 ```
 
+```
+cat <<EOF | kubectl apply -f -
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aks-scaler-deployment
+  namespace: ${SERVICE_ACCOUNT_NAMESPACE}
+  labels:
+    azure.workload.identity/use: "true"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: aks-scaler
+  template:
+    metadata:
+      labels:
+        app: aks-scaler
+    spec:
+      serviceAccountName: ${SERVICE_ACCOUNT_NAME}
+      containers:
+        - image: ${ACR_NAME}.azurecr.io/aks-skaler:latest
+          name: oidc
+          env:
+          - name: SUBSCRIPTION
+            value: ${SUBSCRIPTION}
+          - name: NODE_POOLS_AMOUNT
+            value: "{ \"manualpool2\": 5, \"manualpool3\": 5 }"
+          - name: RESOURCE_GROUP
+            value: ${RESOURCE_GROUP}
+          - name: LOCATION
+            value: ${LOCATION}
+          - name: CLUSTER_NAME
+            value: ${CLUSTER_NAME}
+      nodeSelector:
+        kubernetes.io/os: linux
+
+EOF
+```
+
 
 ---
 
