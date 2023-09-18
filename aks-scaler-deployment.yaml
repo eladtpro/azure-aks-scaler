@@ -27,23 +27,23 @@ spec:
                 key: subscription
           - name: NODE_POOLS_AMOUNT
             valueFrom:
-              secretKeyRef:
-                name: node-pools-amount-secret
+              configMapKeyRef:
+                name: aks-scaler-configmap
                 key: node-pools-amount
           - name: RESOURCE_GROUP
             valueFrom:
-              secretKeyRef:
-                name: resource-group-secret
+              configMapKeyRef:
+                name: aks-scaler-configmap
                 key: resource-group
           - name: LOCATION
             valueFrom:
-              secretKeyRef:
-                name: location-secret
+              configMapKeyRef:
+                name: aks-scaler-configmap
                 key: location
           - name: CLUSTER_NAME
             valueFrom:
-              secretKeyRef:
-                name: cluster-name-secret
+              configMapKeyRef:
+                name: aks-scaler-configmap
                 key: cluster-name
       nodeSelector:
         kubernetes.io/os: linux

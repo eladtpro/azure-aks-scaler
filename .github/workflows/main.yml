@@ -52,40 +52,21 @@ jobs:
             admin: 'false'
             use-kubelogin: 'true'
 
-        - uses: azure/k8s-create-secret@v2
+        - uses: azure/setup-kubectl@v3
           with:
-              namespace: ${{ vars.SERVICE_ACCOUNT_NAMESPACE }}
-              secret-type: 'generic'
-              secret-name: subscription-secret
-              data: ${{ secrets.SUBSCRIPTION  }}
-        - uses: azure/k8s-create-secret@v2
-          with:
-              namespace: ${{ vars.SERVICE_ACCOUNT_NAMESPACE }}
-              secret-type: 'generic'
-              secret-name: node-pools-amount-secret
-              data: ${{ vars.NODE_POOLS_AMOUNT }}
-        - uses: azure/k8s-create-secret@v2
-          with:
-              namespace: ${{ vars.SERVICE_ACCOUNT_NAMESPACE }}
-              secret-type: 'generic'
-              secret-name: resource-group-secret
-              data: ${{ vars.RESOURCE_GROUP }}
-        - uses: azure/k8s-create-secret@v2
-          with:
-              namespace: ${{ vars.SERVICE_ACCOUNT_NAMESPACE }}
-              secret-type: 'generic'
-              secret-name: location-secret
-              data: ${{ vars.LOCATION }}
-        - uses: azure/k8s-create-secret@v2
-          with:
-              namespace: ${{ vars.SERVICE_ACCOUNT_NAMESPACE }}
-              secret-type: 'generic'
-              secret-name: cluster-name-secret
-              data: ${{ vars.CLUSTER_NAME }}                
-
-        - uses: Azure/k8s-create-secret@v1.1
-          with:
-            secret-name: aks-scaler-secret
+              version: 'latest' # default is latest stable
+          id: install
+        - name: create subscription-secret
+          run: kubectl create secret generic subscription-secret --from-literal=subscription='${{ secrets.SUBSCRIPTION  }}' --namespace=${{ vars.SERVICE_ACCOUNT_NAMESPACE }}
+        - name: create aks-scaler-configmap
+          run: |
+            kubectl create configmap aks-scaler-configmap \
+              --from-literal=subscription='${{ secrets.SUBSCRIPTION }}' \
+              --from-literal=resource-group='${{ vars.RESOURCE_GROUP }}' \
+              --from-literal=location='${{ vars.LOCATION }}' \
+              --from-literal=cluster-name='${{ vars.CLUSTER_NAME }}' \
+              --from-literal=node-pools-amount='${{ vars.NODE_POOLS_AMOUNT }}' \
+              --namespace=${{ vars.SERVICE_ACCOUNT_NAMESPACE }}
 
         # Deploys application based on given manifest file
         - name: Deploys application
