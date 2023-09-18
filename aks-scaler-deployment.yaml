@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: aks-scaler-deployment
-  namespace: ${{ vars.SERVICE_ACCOUNT_NAMESPACE }}
+  namespace: default # HACK: should be replaced in helm values files ${{ vars.SERVICE_ACCOUNT_NAMESPACE }}
   labels:
     azure.workload.identity/use: "true"
 spec:
@@ -15,7 +15,7 @@ spec:
       labels:
         app: aks-scaler
     spec:
-      serviceAccountName: default # HACK: should be replaced in helm values files ${{vars.SERVICE_ACCOUNT_NAMESPACE}}
+      serviceAccountName: workload-identity-sa # HACK: should be replaced in helm values files ${{vars.SERVICE_ACCOUNT_NAMESPACE}}
       containers:
         - image: acr4aksregistry.azurecr.io/aks-skaler:latest # HACK: should be replaced in helm values files ${{vars.CONTAINER_REGISTRY}}
           name: oidc
