@@ -15,9 +15,9 @@ class AzureConfig:
 
     @classmethod
     @property
-    def SUBSCRIPTION(cls):
-        # Get the value of the SUBSCRIPTION environment variable
-        return os.getenv("SUBSCRIPTION")
+    def SUBSCRIPTION_ID(cls):
+        # Get the value of the SUBSCRIPTION_ID environment variable
+        return os.getenv("SUBSCRIPTION_ID")
 
     @classmethod
     @property

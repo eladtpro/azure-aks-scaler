@@ -20,10 +20,25 @@ spec:
         - image: acr4aksregistry.azurecr.io/aks-skaler:latest # HACK: should be replaced in helm values files ${{vars.CONTAINER_REGISTRY}}
           name: oidc
           env:
-          - name: SUBSCRIPTION
+          - name: AZURE_TENANT_ID
             valueFrom:
               secretKeyRef:
-                name: subscription-secret
+                name: aks-scaler-secret
+                key: tenant
+          - name: AZURE_CLIENT_ID
+            valueFrom:
+              secretKeyRef:
+                name: aks-scaler-secret
+                key: client-id
+          - name: AZURE_CLIENT_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: aks-scaler-secret
+                key: client-secret
+          - name: SUBSCRIPTION_ID
+            valueFrom:
+              secretKeyRef:
+                name: aks-scaler-secret
                 key: subscription
           - name: NODE_POOLS_AMOUNT
             valueFrom:

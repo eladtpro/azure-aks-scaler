@@ -8,18 +8,22 @@ WORKDIR /app
 COPY . .
 
 # Create a virtual environment and activate it
-RUN python -m venv /opt/venv
-ENV PATH="/opt/venv/bin:$PATH"
-RUN . /opt/venv/bin/activate
+RUN python -m venv /.venv
+ENV PATH="/.venv/bin:$PATH"
+RUN . /.venv/bin/activate
 
 # Install any needed packages specified in requirements.txt
 RUN pip install --trusted-host pypi.python.org --upgrade pip -r requirements.txt
 
 # Define environment variable
-# ENV SUBSCRIPTION
+# ENV SUBSCRIPTION_ID
 # ENV NODE_POOLS_AMOUNT={ "manualpool2": 5, "manualpool3": 5 }
 # ENV RESOURCE_GROUP
 # ENV CLUSTER_NAME
+# ENV AZURE_TENANT_ID=xxx
+# ENV AZURE_CLIENT_ID=xxx
+# ENV AZURE_CLIENT_SECRET=xxx
+# ENV SUBSCRIPTION_ID=xxx
 
 # Run main.py when the container launches
-CMD ["python", "main.py"]
+CMD ["python", "app/main.py"]

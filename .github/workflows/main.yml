@@ -56,12 +56,17 @@ jobs:
           with:
               version: 'latest' # default is latest stable
           id: install
-        - name: create subscription-secret
+        - name: create aks-scaler-secret
           run: |
-            if kubectl get secret subscription-secret -n ${{ vars.SERVICE_ACCOUNT_NAMESPACE }} >/dev/null 2>&1; then
-              echo "Secret subscription-secret already exists"
+            if kubectl get secret aks-scaler-secret -n ${{ vars.SERVICE_ACCOUNT_NAMESPACE }} >/dev/null 2>&1; then
+              echo "Secret aks-scaler-secret already exists"
             else
-              kubectl create secret generic subscription-secret --from-literal=subscription='${{ secrets.SUBSCRIPTION }}' --namespace=${{ vars.SERVICE_ACCOUNT_NAMESPACE }}
+              kubectl create secret generic aks-scaler-secret \
+                --from-literal=tenant='${{ secrets.AZURE_TENANT_ID }}' \
+                --from-literal=client-id='${{ secrets.AZURE_CLIENT_ID }}' \
+                --from-literal=client-secret='${{ secrets.AZURE_CLIENT_SECRET }}' \
+                --from-literal=subscription='${{ secrets.SUBSCRIPTION_ID }}' \
+                --namespace=${{ vars.SERVICE_ACCOUNT_NAMESPACE }}
             fi
 
         - name: create aks-scaler-configmap

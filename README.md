@@ -6,6 +6,7 @@
 >
 > *Based on*:
 > [Tutorial: Use a workload identity with an application on Azure Kubernetes Service (AKS)](https://learn.microsoft.com/en-us/azure/aks/learn/tutorial-kubernetes-workload-identity)
+> [Getting started - Managing Container Service using Azure Python SDK](https://learn.microsoft.com/en-us/samples/azure-samples/azure-samples-python-management/containerservice/)
 
 ### How does Workload Identity works
 In this security model, the AKS cluster acts as token issuer, Azure Active Directory uses OpenID Connect to discover public signing keys and verify the authenticity of the service account token before exchanging it for an Azure AD token. Your workload can exchange a service account token projected to its volume for an Azure AD token using the Azure Identity client library or the Microsoft Authentication Library.
@@ -38,18 +39,28 @@ In this security model, the AKS cluster acts as token issuer, Azure Active Direc
 #### <a name="first"></a>A. Prepare the environment  
 > Export environmental variables  
 
-`export RESOURCE_GROUP="myResourceGroup" \`  
-`export LOCATION="westcentralus" \`  
-`export CLUSTER_NAME="myManagedCluster" \`  
-`export SERVICE_ACCOUNT_NAMESPACE="default" \`  
-`export SERVICE_ACCOUNT_NAME="workload-identity-sa" \`  
-`export SUBSCRIPTION="$(az account show --query id --output tsv)" \`  
-`export USER_ASSIGNED_IDENTITY_NAME="userIdentity" \`  
-`export FEDERATED_IDENTITY_CREDENTIAL_NAME="scalerFedIdentity" \`  
-`export USER_ASSIGNED_CLIENT_ID=TBD \`  
-`export AKS_OIDC_ISSUER=TBD \`  
-`export ACR_NAME=acr4aksregistry`    
+```
+export AZURE_TENANT_ID=$(az account show --query tenantId -o tsv) \  
+export SUBSCRIPTION_ID="$(az account show --query id --output tsv)" \  
+export AZURE_CLIENT_ID="<from app registration>" \  
+export AZURE_CLIENT_SECRET="<from app registration>" \  
+```
 
+```
+export RESOURCE_GROUP="myResourceGroup" \  
+export LOCATION="westcentralus" \  
+export CLUSTER_NAME="myManagedCluster" \  
+export SERVICE_ACCOUNT_NAMESPACE="default" \  
+export SERVICE_ACCOUNT_NAME="workload-identity-sa" \  
+export USER_ASSIGNED_IDENTITY_NAME="userIdentity" \  
+export FEDERATED_IDENTITY_CREDENTIAL_NAME="scalerFedIdentity" \  
+```
+
+```
+export USER_ASSIGNED_CLIENT_ID=TBD \  
+export AKS_OIDC_ISSUER=TBD \  
+export ACR_NAME=acr4aksregistry  
+```
 > Before using any Azure CLI commands with a local install, you need to sign in with [az login](https://learn.microsoft.com/en-us/cli/azure/reference-index#az-login).  
 
 `az login`
@@ -79,7 +90,7 @@ In this security model, the AKS cluster acts as token issuer, Azure Active Direc
 > [Use a managed identity in Azure Kubernetes Service (AKS)](https://learn.microsoft.com/en-us/azure/aks/use-managed-identity)
 
 1. Create a managed identity using the [az identity create](https://learn.microsoft.com/en-us/cli/azure/identity#az-identity-create) command:  
-`az identity create --name "${USER_ASSIGNED_IDENTITY_NAME}" --resource-group "${RESOURCE_GROUP}" --location "${LOCATION}" --subscription "${SUBSCRIPTION}"`
+`az identity create --name "${USER_ASSIGNED_IDENTITY_NAME}" --resource-group "${RESOURCE_GROUP}" --location "${LOCATION}" --subscription "${SUBSCRIPTION_ID}"`
 
 2. Set the CLIENT_ID environment variable:  
 `export USER_ASSIGNED_CLIENT_ID="$(az identity show --resource-group "${RESOURCE_GROUP}" --name "${USER_ASSIGNED_IDENTITY_NAME}" --query 'clientId' -otsv)"`
@@ -95,14 +106,14 @@ In this security model, the AKS cluster acts as token issuer, Azure Active Direc
 5. Get the principal ID of managed identity:  
 > Get the existing identity's principal ID using the [az identity show](https://learn.microsoft.com/en-us/cli/azure/identity#az_identity_show) command.
 
-`az identity show --ids /subscriptions/"${SUBSCRIPTION}"/resourceGroups/"${RESOURCE_GROUP}"/providers/Microsoft.ManagedIdentity/userAssignedIdentities/"${USER_ASSIGNED_IDENTITY_NAME}"`
+`az identity show --ids /subscriptions/"${SUBSCRIPTION_ID}"/resourceGroups/"${RESOURCE_GROUP}"/providers/Microsoft.ManagedIdentity/userAssignedIdentities/"${USER_ASSIGNED_IDENTITY_NAME}"`
 
 
 6. Add role assignment:  
 > Assign the Managed Identity Operator role on the kubelet identity using the [az role assignment create](https://learn.microsoft.com/en-us/cli/azure/role/assignment#az_role_assignment_create) command.
 > Following the principle of lease priviliges we will try to give less permissions by using custom roles, in this case we will use the builtin roles.  
  
-`az role assignment create --assignee <control-plane-identity-principal-id>  --role "Azure Kubernetes Service Cluster Admin Role" --scope "/subscriptions/"${SUBSCRIPTION}"/resourceGroups/"${RESOURCE_GROUP}"/providers/Microsoft.ContainerService/managedClusters/"${CLUSTER_NAME}"`
+`az role assignment create --assignee <control-plane-identity-principal-id>  --role "Azure Kubernetes Service RBAC Cluster Admin" --scope "/subscriptions/"${SUBSCRIPTION_ID}"/resourceGroups/"${RESOURCE_GROUP}"/providers/Microsoft.ContainerService/managedClusters/"${CLUSTER_NAME}"`
 
 
 #### <a name="forth"></a>D. Create Kubernetes service account  
@@ -155,6 +166,15 @@ az aks update -n ${CLUSTER_NAME} -g ${RESOURCE_GROUP} --attach-acr <acr-resource
 az acr build --image aks-skaler:latest --registry ${ACR_NAME} --file Dockerfile .
 ```
 
+<!-- az acr build \
+  --image aks-skaler:latest \
+  --registry ${ACR_NAME} \
+  --build-arg SUBSCRIPTION_ID=${SUBSCRIPTION_ID} \
+  --build-arg NODE_POOLS_AMOUNT='{"manualpool2": 5, "manualpool3": 5}' \
+  --build-arg RESOURCE_GROUP=${RESOURCE_GROUP} \
+  --build-arg CLUSTER_NAME=${CLUSTER_NAME} \
+  --file Dockerfile . -->
+
 #### <a name="seventh"></a>G. Deploy the workload  
 
 1. Deploy a pod that references the service account created in the previous step using the following command.
@@ -183,8 +203,8 @@ spec:
         - image: ${ACR_NAME}.azurecr.io/aks-skaler:latest
           name: oidc
           env:
-          - name: SUBSCRIPTION
-            value: ${SUBSCRIPTION}
+          - name: SUBSCRIPTION_ID
+            value: ${SUBSCRIPTION_ID}
           - name: NODE_POOLS_AMOUNT
             value: "{ \"manualpool2\": 5, \"manualpool3\": 5 }"
           - name: RESOURCE_GROUP
@@ -221,7 +241,7 @@ To create the *AZURE_CREDENTIALS* and KUBECONFIG secrets in your GitHub reposito
      11. Click on "Add secret".
 2. Get the *AZURE_CREDENTIALS* value, We will create a service principal and configure its access to Azure resources using the [az ad sp create-for-rbac](https://learn.microsoft.com/en-us/cli/azure/ad/sp?view=azure-cli-latest#az-ad-sp-create-for-rbac()).
 The output includes credentials that you must protect. Be sure that you do not include these credentials in your code or check the credentials into your source control. As an alternative, consider using managed identities if available to avoid the need to use credentials.  
-`az ad sp create-for-rbac --name aks-scaler --role contributor --scopes /subscriptions/${SUBSCRIPTION}/resourceGroups/${RESOURCE_GROUP}`  
+`az ad sp create-for-rbac --name aks-scaler --role contributor --scopes /subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP}`  
 ***Output:***  
     ```
     {
