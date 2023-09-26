@@ -42,7 +42,7 @@ In this security model, the AKS cluster acts as token issuer, Azure Active Direc
 ---
 
 #### <a name="first"></a>Prepare the environment  
-##### Environment variables (used by the python app)
+###### Environment variables (used by the python app)
 
 ```
 export SUBSCRIPTION_ID="$(az account show --query id --output tsv)" \
