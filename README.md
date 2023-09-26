@@ -345,26 +345,28 @@ The output includes credentials that you must protect. Be sure that you do not i
 
 ```
 az ad sp create-for-rbac --name aks-scaler --role contributor --scopes /subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP}
+```
+As an alternative we can use the cluster resource id:
 
-az ad sp create-for-rbac --name aks-scaler --role "Azure Kubernetes Service RBAC Cluster Admin" --scopes /subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP}/providers/Microsoft.ContainerService/managedClusters/${CLUSTER_NAME}
-```  
+`az ad sp create-for-rbac --name aks-scaler --role "Azure Kubernetes Service RBAC Cluster Admin" --scopes /subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP}/providers/Microsoft.ContainerService/managedClusters/${CLUSTER_NAME}
+`  
 
 
 
 ***Output:***  
     ```
-    {
-      "clientId": "00000000-0000-0000-0000-000000000000",
-      "clientSecret": "<SECRET>",
-      "subscriptionId": "00000000-0000-0000-0000-000000000000",
-      "tenantId": "00000000-0000-0000-0000-000000000000",
-      "activeDirectoryEndpointUrl": "https://login.microsoftonline.com",
-      "resourceManagerEndpointUrl": "https://management.azure.com/",
-      "activeDirectoryGraphResourceId": "https://graph.windows.net/",
-      "sqlManagementEndpointUrl": "https://management.core.windows.net:8443/",
-      "galleryEndpointUrl": "https://gallery.azure.com/",
-      "managementEndpointUrl": "https://management.core.windows.net/"
-    }
+    {  
+      "clientId": "00000000-0000-0000-0000-000000000000",  
+      "clientSecret": "<SECRET>",  
+      "subscriptionId": "00000000-0000-0000-0000-000000000000",  
+      "tenantId": "00000000-0000-0000-0000-000000000000",  
+      "activeDirectoryEndpointUrl": "https://login.microsoftonline.com",  
+      "resourceManagerEndpointUrl": "https://management.azure.com/",  
+      "activeDirectoryGraphResourceId": "https://graph.windows.net/",  
+      "sqlManagementEndpointUrl": "https://management.core.windows.net:8443/",  
+      "galleryEndpointUrl": "https://gallery.azure.com/",  
+      "managementEndpointUrl": "https://management.core.windows.net/"  
+    }  
     ```
 
 3. Get the *KUBECONFIG* secret value
