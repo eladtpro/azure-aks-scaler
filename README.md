@@ -116,10 +116,16 @@ Before using any Azure CLI commands with a local install, you need to sign in wi
 5. Add role assignment, Assign the Managed Identity Operator role on the kubelet identity using the [az role assignment create](https://learn.microsoft.com/en-us/cli/azure/role/assignment#az_role_assignment_create) command:    
 
 ```
-az role assignment create --assignee "${ASSIGNED_MANAGED_IDENTITY_CLIENT_ID}" \  
+az role assignment create 
+  --assignee "${ASSIGNED_MANAGED_IDENTITY_CLIENT_ID}" \    
   --role "Azure Kubernetes Service RBAC Cluster Admin" \  
   --scope "/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP}/providers/Microsoft.ContainerService/managedClusters/${CLUSTER_NAME}"
 ```
+
+
+/subscriptions/977171a9-6bfd-49c4-a496-018d3312466e/resourceGroups/azure-kubernetes-service/providers/Microsoft.ContainerService/managedClusters/callcenter
+/subscriptions/977171a9-6bfd-49c4-a496-018d3312466e/resourceGroups/azure-kubernetes-service/providers/Microsoft.ContainerService/managedClusters/callcenter
+
 
 <!-- `az role assignment create --assignee ${ASSIGNED_MANAGED_IDENTITY_NAME} --role "Azure Kubernetes Service RBAC Cluster Admin" --scope "/subscriptions/"${SUBSCRIPTION_ID}"/resourceGroups/"${RESOURCE_GROUP}"/providers/Microsoft.ContainerService/managedClusters/${CLUSTER_NAME}"` -->
 
