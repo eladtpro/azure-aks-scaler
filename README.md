@@ -122,6 +122,28 @@ az role assignment create \
   --scope "/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP}/providers/Microsoft.ContainerService/managedClusters/${CLUSTER_NAME}"
 ```
 
+***Output:*** 
+```
+{
+  "condition": null,
+  "conditionVersion": null,
+  "createdBy": null,
+  "createdOn": "2023-09-26T08:14:10.119736+00:00",
+  "delegatedManagedIdentityResourceId": null,
+  "description": null,
+  "id": "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/<RESOURCE_GROUP>/providers/Microsoft.ContainerService/managedClusters/<CLUSTER_NAME>/providers/Microsoft.Authorization/roleAssignments/f0fd30b0-20da-47e9-a3f3-cfeca0afc461",
+  "name": "f0fd30b0-20da-47e9-a3f3-cfeca0afc461",
+  "principalId": "<principalId>",
+  "principalType": "ServicePrincipal",
+  "resourceGroup": "<RESOURCE_GROUP>",
+  "roleDefinitionId": "/subscriptions/<SUBSCRIPTION_ID>/providers/Microsoft.Authorization/roleDefinitions/00000000-0000-0000-0000-000000000000",
+  "scope": "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/<RESOURCE_GROUP>/providers/Microsoft.ContainerService/managedClusters/<CLUSTER_NAME>",
+  "type": "Microsoft.Authorization/roleAssignments",
+  "updatedBy": "00000000-0000-0000-0000-000000000000",
+  "updatedOn": "2023-09-26T08:14:10.492744+00:00"
+}
+```
+
 <!-- `az role assignment create --assignee ${ASSIGNED_MANAGED_IDENTITY_NAME} --role "Azure Kubernetes Service RBAC Cluster Admin" --scope "/subscriptions/"${SUBSCRIPTION_ID}"/resourceGroups/"${RESOURCE_GROUP}"/providers/Microsoft.ContainerService/managedClusters/${CLUSTER_NAME}"` -->
 
 <!-- 5. Get the principal ID of managed identity using the [az identity show](https://learn.microsoft.com/en-us/cli/azure/identity#az_identity_show) command.
