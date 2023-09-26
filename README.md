@@ -207,11 +207,11 @@ EOF
 `export AKS_OIDC_ISSUER="$(az aks show -n "${CLUSTER_NAME}" -g "${RESOURCE_GROUP}" --query "oidcIssuerProfile.issuerUrl" -otsv)"` -->
 1. Create the federated identity credential between the managed identity, service account issuer, and subject using the [az identity federated-credential create](https://learn.microsoft.com/en-us/cli/azure/identity/federated-credential#az-identity-federated-credential-create) command.
 ```
-az identity federated-credential create 
-  --name ${FEDERATED_IDENTITY_CREDENTIAL_NAME} 
-  --identity-name ${ASSIGNED_MANAGED_IDENTITY_NAME} 
-  --resource-group ${RESOURCE_GROUP} 
-  --issuer ${AKS_OIDC_ISSUER} 
+az identity federated-credential create \  
+  --name ${FEDERATED_IDENTITY_CREDENTIAL_NAME} \  
+  --identity-name ${ASSIGNED_MANAGED_IDENTITY_NAME} \  
+  --resource-group ${RESOURCE_GROUP} \  
+  --issuer ${AKS_OIDC_ISSUER} \  
   --subject system:serviceaccount:${SERVICE_ACCOUNT_NAMESPACE}:${SERVICE_ACCOUNT_NAME}
 ```  
 ***Output:***  
