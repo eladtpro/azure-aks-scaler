@@ -113,8 +113,11 @@ Before using any Azure CLI commands with a local install, you need to sign in wi
 4. Enable managed identities on an existing AKS cluster, Update current cluster to managed identity to manage cluster resource group (default value: False).
    To update your existing AKS cluster that's using a service principal to use a system-assigned managed identity, run the [az aks update](https://learn.microsoft.com/en-us/cli/azure/aks#az_aks_update) command:  
 `az aks update -g "${RESOURCE_GROUP}" -n "${CLUSTER_NAME}" --enable-managed-identity`
-6. Add role assignment, Assign the Managed Identity Operator role on the kubelet identity using the [az role assignment create](https://learn.microsoft.com/en-us/cli/azure/role/assignment#az_role_assignment_create) command:    
-`az role assignment create --assignee "${ASSIGNED_MANAGED_IDENTITY_PRINCIPAL_ID}" --role "Azure Kubernetes Service RBAC Cluster Admin" --scope "/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP}/providers/Microsoft.ContainerService/managedClusters/${CLUSTER_NAME}"`
+5. Add role assignment, Assign the Managed Identity Operator role on the kubelet identity using the [az role assignment create](https://learn.microsoft.com/en-us/cli/azure/role/assignment#az_role_assignment_create) command:    
+
+```
+az role assignment create --assignee "${ASSIGNED_MANAGED_IDENTITY_PRINCIPAL_ID}" --role "Azure Kubernetes Service RBAC Cluster Admin" --scope "/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP}/providers/Microsoft.ContainerService/managedClusters/${CLUSTER_NAME}"
+```
 
 <!-- `az role assignment create --assignee ${ASSIGNED_MANAGED_IDENTITY_NAME} --role "Azure Kubernetes Service RBAC Cluster Admin" --scope "/subscriptions/"${SUBSCRIPTION_ID}"/resourceGroups/"${RESOURCE_GROUP}"/providers/Microsoft.ContainerService/managedClusters/${CLUSTER_NAME}"` -->
 
