@@ -128,9 +128,9 @@ az aks get-credentials --resource-group "${RESOURCE_GROUP}" --name "${CLUSTER_NA
 5. Add role assignment, Assign the Managed Identity Operator role on the kubelet identity using the [az role assignment create](https://learn.microsoft.com/en-us/cli/azure/role/assignment#az_role_assignment_create) command:    
 
 ```
-az role assignment create \  
-  --assignee ${ASSIGNED_MANAGED_IDENTITY_CLIENT_ID} \    
-  --role "Azure Kubernetes Service RBAC Cluster Admin" \  
+az role assignment create  
+  --assignee ${ASSIGNED_MANAGED_IDENTITY_CLIENT_ID}  
+  --role "Azure Kubernetes Service RBAC Cluster Admin"  
   --scope "/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP}/providers/Microsoft.ContainerService/managedClusters/${CLUSTER_NAME}"
 ```
 
@@ -143,8 +143,8 @@ az role assignment create \
   "createdOn": "2023-09-26T08:14:10.119736+00:00",
   "delegatedManagedIdentityResourceId": null,
   "description": null,
-  "id": "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/<RESOURCE_GROUP>/providers/Microsoft.ContainerService/managedClusters/<CLUSTER_NAME>/providers/Microsoft.Authorization/roleAssignments/f0fd30b0-20da-47e9-a3f3-cfeca0afc461",
-  "name": "f0fd30b0-20da-47e9-a3f3-cfeca0afc461",
+  "id": "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/<RESOURCE_GROUP>/providers/Microsoft.ContainerService/managedClusters/<CLUSTER_NAME>/providers/Microsoft.Authorization/roleAssignments/00000000-0000-0000-0000-000000000000",
+  "name": "00000000-0000-0000-0000-000000000000",
   "principalId": "<principalId>",
   "principalType": "ServicePrincipal",
   "resourceGroup": "<RESOURCE_GROUP>",
@@ -168,10 +168,15 @@ az role assignment create \
 
 #### <a name="forth"></a>Create Kubernetes service account  
 
-1. Create a Kubernetes service account and annotate it with the client ID of the managed identity created in the previous step using the [az aks get-credentials](https://learn.microsoft.com/en-us/cli/azure/aks#az-aks-get-credentials) command. Replace the default value for the cluster name and the resource group name.  
+Create a Kubernetes service account and annotate it with the client ID of the managed identity created in the previous step using the [az aks get-credentials](https://learn.microsoft.com/en-us/cli/azure/aks#az-aks-get-credentials) command. Replace the default value for the cluster name and the resource group name.  
+
+1. Get access credentials for a managed Kubernetes cluster.  
+By default, the credentials are merged into the .kube/config file so kubectl can use them. See -f parameter for details.
+
 ```
 az aks get-credentials -n "${CLUSTER_NAME}" -g "${RESOURCE_GROUP}"
 ```  
+
 
 2. Copy the following multi-line input into your terminal and run the command to create the service account.  
 ```
@@ -189,6 +194,15 @@ EOF
     `Serviceaccount/workload-identity-sa created`  
 
 #### <a name="fifth"></a>Establish federated identity credential  
+> Traditionally, developers use certificates or client secrets for their application's credentials to authenticate with and access services in Azure AD. To access the services in their Azure AD tenant, developers have had to store and manage application credentials outside Azure, introducing the following bottlenecks:
+>  
+> * A maintenance burden for certificates and secrets.
+> * The risk of leaking secrets.
+> * Certificates expiring and service disruptions because of failed authentication.
+> 
+> **Federated identity credentials** are a new type of credential that enables workload identity federation for software workloads. Workload identity federation allows you to access Azure Active Directory (Azure AD) protected resources without needing to manage secrets (for supported scenarios).
+> **Further Reading**: [Overview of federated identity credentials in Azure Active Directory](https://learn.microsoft.com/en-us/graph/api/resources/federatedidentitycredentials-overview?view=graph-rest-1.0)
+
 <!-- 1. Get the OIDC Issuer URL and save it to an environmental variable using the following command. Replace the default value for the arguments -n, which is the name of the cluster.  
 `export AKS_OIDC_ISSUER="$(az aks show -n "${CLUSTER_NAME}" -g "${RESOURCE_GROUP}" --query "oidcIssuerProfile.issuerUrl" -otsv)"` -->
 1. Create the federated identity credential between the managed identity, service account issuer, and subject using the [az identity federated-credential create](https://learn.microsoft.com/en-us/cli/azure/identity/federated-credential#az-identity-federated-credential-create) command.
