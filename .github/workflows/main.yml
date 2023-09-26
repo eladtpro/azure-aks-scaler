@@ -82,6 +82,18 @@ jobs:
                 --namespace=${{ vars.SERVICE_ACCOUNT_NAMESPACE }}
             fi            
 
+        - name: create azure-wi-webhook-config configmap
+          run: |
+            if kubectl get configmap azure-wi-webhook-config -n ${{ vars.SERVICE_ACCOUNT_NAMESPACE }} >/dev/null 2>&1; then
+              echo "ConfigMap azure-wi-webhook-config already exists"
+            else
+              kubectl create configmap azure-wi-webhook-config \
+                --from-literal=AZURE_TENANT_ID='${{ secrets.AZURE_TENANT_ID }}' \
+                --namespace=${{ vars.SERVICE_ACCOUNT_NAMESPACE }}
+            fi            
+  
+
+
         # Deploys application based on given manifest file
         - name: Deploys application
           uses: Azure/k8s-deploy@v4

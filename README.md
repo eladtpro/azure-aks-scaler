@@ -1,7 +1,7 @@
 ![AKS Scaling](assets/Azure-Kubernetes-Service.jpg)
 
 *Azure AKS Scaler*
-## Azure Kubernetes Service (AKS) Workload Identity
+# Azure Kubernetes Service (AKS) Workload Identity
 > Azure Kubernetes Service (AKS) Workload Identity is a feature that allows Kubernetes pods to authenticate with Azure services using their own identities, instead of using a service principal. This provides a more secure and streamlined way to access Azure resources from within a Kubernetes cluster.  
 >
 > *Based on*:
@@ -14,37 +14,34 @@ In this security model, the AKS cluster acts as token issuer, Azure Active Direc
 [![AKS Workload Identity Overview](assets/aks-workload-identity-model.png)](https://learn.microsoft.com/en-us/azure/aks/workload-identity-overview?tabs=python)
 
 
-### Agenda
+### In this article
 
-&nbsp;&nbsp;&nbsp;&nbsp;[A. Export environmental variables](#first)  
-&nbsp;&nbsp;&nbsp;&nbsp;[B. Create an OpenID Connect provider on Azure Kubernetes Service (AKS)](#second)  
-&nbsp;&nbsp;&nbsp;&nbsp;[C. Create a managed identity and grant permissions to access AKS control plane](#third)  
-&nbsp;&nbsp;&nbsp;&nbsp;[D. Create Kubernetes service account](#forth)  
-&nbsp;&nbsp;&nbsp;&nbsp;[E. Establish federated identity credential](#fifth)  
-&nbsp;&nbsp;&nbsp;&nbsp;[F. Prepare the container image](#sixth)  
-&nbsp;&nbsp;&nbsp;&nbsp;[G. Deploy the workload](#seventh)  
-&nbsp;&nbsp;&nbsp;&nbsp;[G.a. Deploy using GitHub action](#seventha)  
+&nbsp;&nbsp;&nbsp;&nbsp;[Prepare the environment](#first)  
+&nbsp;&nbsp;&nbsp;&nbsp;[Enable OpenID Connect (OIDC) provider on existing AKS cluster](#second)  
+&nbsp;&nbsp;&nbsp;&nbsp;[Create a managed identity and grant permissions to access AKS control plane](#third)  
+&nbsp;&nbsp;&nbsp;&nbsp;[Create Kubernetes service account](#forth)  
+&nbsp;&nbsp;&nbsp;&nbsp;[Establish federated identity credential](#fifth)  
+&nbsp;&nbsp;&nbsp;&nbsp;[Prepare the container image](#sixth)  
+&nbsp;&nbsp;&nbsp;&nbsp;[Deploy the workload](#seventh)  
+&nbsp;&nbsp;&nbsp;&nbsp;[Deploy using GitHub action](#seventha)  
 
 
 
 ##### Prerequisites
 
- * <sub>If you don't have an [Azure subscription](https://learn.microsoft.com/en-us/azure/guides/developer/azure-developer-guide#understanding-accounts-subscriptions-and-billing), create an [Azure free account](https://azure.microsoft.com/free/?ref=microsoft.com&utm_source=microsoft.com&utm_medium=docs&utm_campaign=visualstudio) before you begin.</sub>  
-* <sub>This article requires version 2.47.0 or later of the Azure CLI. If using Azure Cloud Shell, the latest version is already installed.</sub>  
-* <sub>The identity you use to create your cluster must have the appropriate minimum permissions. For more information on access and identity for AKS, see Access and identity options for [Azure Kubernetes Service (AKS)](https://learn.microsoft.com/en-us/azure/aks/concepts-identity).</sub>  
-* <sub>If you have multiple Azure subscriptions, select the appropriate subscription ID in which the resources should be billed using the [az account](https://learn.microsoft.com/en-us/cli/azure/account) command.</sub>  
+ * If you don't have an [Azure subscription](https://learn.microsoft.com/en-us/azure/guides/developer/azure-developer-guide#understanding-accounts-subscriptions-and-billing), create an [Azure free account](https://azure.microsoft.com/free/?ref=microsoft.com&utm_source=microsoft.com&utm_medium=docs&utm_campaign=visualstudio) before you begin.  
+* AKS supports Azure AD workload identities on version 1.22 and higher.
+* The Azure CLI version 2.47.0 or later. Run az --version to find the version, and run az upgrade to upgrade the version. If you need to install or upgrade, see [Install Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli).
+* The identity you use to create your cluster must have the appropriate minimum permissions. For more information on access and identity for AKS, see Access and identity options for [Azure Kubernetes Service (AKS)](https://learn.microsoft.com/en-us/azure/aks/concepts-identity).  
+* If you have multiple Azure subscriptions, select the appropriate subscription ID in which the resources should be billed using the [az account](https://learn.microsoft.com/en-us/cli/azure/account) command.
+
 
 ---
 
-#### <a name="first"></a>A. Prepare the environment  
-> Export environmental variables  
+#### <a name="first"></a>Prepare the environment  
+##### Export environment variables  
 
-```
-export AZURE_TENANT_ID=$(az account show --query tenantId -o tsv) \  
-export SUBSCRIPTION_ID="$(az account show --query id --output tsv)" \  
-export AZURE_CLIENT_ID="<from app registration>" \  
-export AZURE_CLIENT_SECRET="<from app registration>" \  
-```
+Static initalized Variables:  
 
 ```
 export RESOURCE_GROUP="myResourceGroup" \  
@@ -52,20 +49,34 @@ export LOCATION="westcentralus" \
 export CLUSTER_NAME="myManagedCluster" \  
 export SERVICE_ACCOUNT_NAMESPACE="default" \  
 export SERVICE_ACCOUNT_NAME="workload-identity-sa" \  
-export USER_ASSIGNED_IDENTITY_NAME="userIdentity" \  
+export ASSIGNED_MANAGED_IDENTITY_NAME="aksSkalerIdentity" \  
 export FEDERATED_IDENTITY_CREDENTIAL_NAME="scalerFedIdentity" \  
-```
-
-```
-export USER_ASSIGNED_CLIENT_ID=TBD \  
-export AKS_OIDC_ISSUER=TBD \  
 export ACR_NAME=acr4aksregistry  
 ```
-> Before using any Azure CLI commands with a local install, you need to sign in with [az login](https://learn.microsoft.com/en-us/cli/azure/reference-index#az-login).  
+<!-- export ASSIGNED_MANAGED_IDENTITY_PRINCIPAL_ID="$(az identity show --ids /subscriptions/"${SUBSCRIPTION_ID}"/resourceGroups/"${RESOURCE_GROUP}"/providers/Microsoft.ManagedIdentity/userAssignedIdentities/"${ASSIGNED_MANAGED_IDENTITY_NAME}" --query principalId)" \   -->
+
+
+Variables generated in the process:  
+```
+export ASSIGNED_MANAGED_IDENTITY_CLIENT_ID="$(az identity show --resource-group "${RESOURCE_GROUP}" --name "${ASSIGNED_MANAGED_IDENTITY_NAME}" --query 'clientId' -otsv)" \  
+export AKS_OIDC_ISSUER="$(az aks show -n myAKSCluster -g "${RESOURCE_GROUP}" --query "oidcIssuerProfile.issuerUrl" -otsv)" \  
+```
+
+App Registration Variables:  
+```
+export AZURE_TENANT_ID=$(az account show --query tenantId -o tsv) \  
+export SUBSCRIPTION_ID="$(az account show --query id --output tsv)" \  
+export AZURE_CLIENT_ID="<from app registration>" \  
+export AZURE_CLIENT_SECRET="<from app registration>" \  
+```
+
+##### Login to Azure    
+
+Before using any Azure CLI commands with a local install, you need to sign in with [az login](https://learn.microsoft.com/en-us/cli/azure/reference-index#az-login).  
 
 `az login`
 
-#### <a name="second"></a>B. Create an OpenID Connect provider on Azure Kubernetes Service (AKS)
+#### <a name="second"></a>Enable OpenID Connect (OIDC) provider on existing AKS cluster  
 > [OpenID Connect (OIDC)](https://learn.microsoft.com/en-us/azure/active-directory/fundamentals/auth-oidc) extends OAuth 2.0 for authentication via Azure AD. It enables SSO on Azure Kubernetes Service (AKS) using an ID token. AKS can automatically rotate keys or do it manually. Token lifetime is one day.
 > This section teaches you how to create, update, and manage the OIDC Issuer for your cluster.
 >
@@ -83,40 +94,39 @@ export ACR_NAME=acr4aksregistry
 3. Get the OIDC Issuer URL and save it to an environmental variable:  
 `export AKS_OIDC_ISSUER="$(az aks show -n "${CLUSTER_NAME}" -g "${RESOURCE_GROUP}" --query "oidcIssuerProfile.issuerUrl" -otsv)"`
 
-#### <a name="third"></a>C. Create a managed identity and grant permissions to access AKS control plane
+#### <a name="third"></a>Create a managed identity and grant permissions to access AKS control plane
 > Azure Kubernetes Service (AKS) needs an identity for accessing Azure resources like load balancers and disks, which can be a [managed identity](https://learn.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview) or service principal. A system-assigned managed identity is auto-generated and managed by Azure, while a [service principal](https://learn.microsoft.com/en-us/azure/aks/kubernetes-service-principal) must be created manually. Service principals expire and require renewal, making managed identities a simpler choice. Both have the same permission requirements and use certificate-based authentication. Managed identities have 90-day credentials that roll every 45 days. AKS supports both system-assigned and user-assigned managed identities, which are immutable.  
 > **Further Reading**:
 > [Assign a managed identity access to a resource using Azure CLI](https://learn.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/howto-assign-access-cli)
 > [Use a managed identity in Azure Kubernetes Service (AKS)](https://learn.microsoft.com/en-us/azure/aks/use-managed-identity)
 
 1. Create a managed identity using the [az identity create](https://learn.microsoft.com/en-us/cli/azure/identity#az-identity-create) command:  
-`az identity create --name "${USER_ASSIGNED_IDENTITY_NAME}" --resource-group "${RESOURCE_GROUP}" --location "${LOCATION}" --subscription "${SUBSCRIPTION_ID}"`
+`az identity create --name "${ASSIGNED_MANAGED_IDENTITY_NAME}" --resource-group "${RESOURCE_GROUP}" --location "${LOCATION}" --subscription "${SUBSCRIPTION_ID}"`
 
 2. Set the CLIENT_ID environment variable:  
-`export USER_ASSIGNED_CLIENT_ID="$(az identity show --resource-group "${RESOURCE_GROUP}" --name "${USER_ASSIGNED_IDENTITY_NAME}" --query 'clientId' -otsv)"`
+`export ASSIGNED_MANAGED_IDENTITY_CLIENT_ID="$(az identity show --resource-group "${RESOURCE_GROUP}" --name "${ASSIGNED_MANAGED_IDENTITY_NAME}" --query 'clientId' -otsv)"`
 
-3. Get credentials to access the cluster using the [az aks get-credentials](https://learn.microsoft.com/en-us/cli/azure/aks#az_aks_get_credentials) command:  
+3. Get credentials to access the cluster using the [az aks get-credentials](https://learn.microsoft.com/en-us/cli/azure/aks?view=azure-cli-latest#az-aks-get-credentials()) command,  
+   By default, the credentials are merged into the .kube/config file so kubectl can use them:  
 `az aks get-credentials --resource-group "${RESOURCE_GROUP}" --name "${CLUSTER_NAME}"`
 
-4. Enable managed identities on an existing AKS cluster 
-> To update your existing AKS cluster that's using a service principal to use a system-assigned managed identity, run the [az aks update](https://learn.microsoft.com/en-us/cli/azure/aks#az_aks_update) command.  
-
+4. Enable managed identities on an existing AKS cluster, Update current cluster to managed identity to manage cluster resource group (default value: False).
+   To update your existing AKS cluster that's using a service principal to use a system-assigned managed identity, run the [az aks update](https://learn.microsoft.com/en-us/cli/azure/aks#az_aks_update) command:  
 `az aks update -g "${RESOURCE_GROUP}" -n "${CLUSTER_NAME}" --enable-managed-identity`
+6. Add role assignment, Assign the Managed Identity Operator role on the kubelet identity using the [az role assignment create](https://learn.microsoft.com/en-us/cli/azure/role/assignment#az_role_assignment_create) command:    
+`az role assignment create --assignee "${ASSIGNED_MANAGED_IDENTITY_PRINCIPAL_ID}" --role "Azure Kubernetes Service RBAC Cluster Admin" --scope "/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP}/providers/Microsoft.ContainerService/managedClusters/${CLUSTER_NAME}"`
 
-5. Get the principal ID of managed identity:  
-> Get the existing identity's principal ID using the [az identity show](https://learn.microsoft.com/en-us/cli/azure/identity#az_identity_show) command.
+<!-- `az role assignment create --assignee ${ASSIGNED_MANAGED_IDENTITY_NAME} --role "Azure Kubernetes Service RBAC Cluster Admin" --scope "/subscriptions/"${SUBSCRIPTION_ID}"/resourceGroups/"${RESOURCE_GROUP}"/providers/Microsoft.ContainerService/managedClusters/${CLUSTER_NAME}"` -->
 
-`az identity show --ids /subscriptions/"${SUBSCRIPTION_ID}"/resourceGroups/"${RESOURCE_GROUP}"/providers/Microsoft.ManagedIdentity/userAssignedIdentities/"${USER_ASSIGNED_IDENTITY_NAME}"`
+<!-- 5. Get the principal ID of managed identity using the [az identity show](https://learn.microsoft.com/en-us/cli/azure/identity#az_identity_show) command.
+`ASSIGNED_MANAGED_IDENTITY_PRINCIPAL_ID=$(az identity show --ids /subscriptions/"${SUBSCRIPTION_ID}"/resourceGroups/"${RESOURCE_GROUP}"/providers/Microsoft.ManagedIdentity/userAssignedIdentities/"${ASSIGNED_MANAGED_IDENTITY_NAME}" --query principalId)` -->
 
 
-6. Add role assignment:  
-> Assign the Managed Identity Operator role on the kubelet identity using the [az role assignment create](https://learn.microsoft.com/en-us/cli/azure/role/assignment#az_role_assignment_create) command.
-> Following the principle of lease priviliges we will try to give less permissions by using custom roles, in this case we will use the builtin roles.  
+> **Following the principle of lease priviliges we will try to give less permissions by using custom roles, in this case we will use the builtin *Azure Kubernetes Service RBAC Cluster Admin* role**.  
  
-`az role assignment create --assignee <control-plane-identity-principal-id>  --role "Azure Kubernetes Service RBAC Cluster Admin" --scope "/subscriptions/"${SUBSCRIPTION_ID}"/resourceGroups/"${RESOURCE_GROUP}"/providers/Microsoft.ContainerService/managedClusters/${CLUSTER_NAME}"`
 
 
-#### <a name="forth"></a>D. Create Kubernetes service account  
+#### <a name="forth"></a>Create Kubernetes service account  
 
 1. Create a Kubernetes service account and annotate it with the client ID of the managed identity created in the previous step using the [az aks get-credentials](https://learn.microsoft.com/en-us/cli/azure/aks#az-aks-get-credentials) command. Replace the default value for the cluster name and the resource group name.  
 `az aks get-credentials -n "${CLUSTER_NAME}" -g "${RESOURCE_GROUP}"`  
@@ -127,23 +137,23 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   annotations:
-    azure.workload.identity/client-id: ${USER_ASSIGNED_CLIENT_ID}
+    azure.workload.identity/client-id: ${ASSIGNED_MANAGED_IDENTITY_CLIENT_ID}
   name: ${SERVICE_ACCOUNT_NAME}
   namespace: ${SERVICE_ACCOUNT_NAMESPACE}
 EOF`  
 ***Output:*** 
     `Serviceaccount/workload-identity-sa created`  
 
-#### <a name="fifth"></a>E. Establish federated identity credential  
-1. Get the OIDC Issuer URL and save it to an environmental variable using the following command. Replace the default value for the arguments -n, which is the name of the cluster.  
-`export AKS_OIDC_ISSUER="$(az aks show -n "${CLUSTER_NAME}" -g "${RESOURCE_GROUP}" --query "oidcIssuerProfile.issuerUrl" -otsv)"`
-2. Create the federated identity credential between the managed identity, service account issuer, and subject using the [az identity federated-credential create](https://learn.microsoft.com/en-us/cli/azure/identity/federated-credential#az-identity-federated-credential-create) command.
-`az identity federated-credential create --name ${FEDERATED_IDENTITY_CREDENTIAL_NAME} --identity-name ${USER_ASSIGNED_IDENTITY_NAME} --resource-group ${RESOURCE_GROUP} --issuer ${AKS_OIDC_ISSUER} --subject system:serviceaccount:${SERVICE_ACCOUNT_NAMESPACE}:${SERVICE_ACCOUNT_NAME}`  
+#### <a name="fifth"></a>Establish federated identity credential  
+<!-- 1. Get the OIDC Issuer URL and save it to an environmental variable using the following command. Replace the default value for the arguments -n, which is the name of the cluster.  
+`export AKS_OIDC_ISSUER="$(az aks show -n "${CLUSTER_NAME}" -g "${RESOURCE_GROUP}" --query "oidcIssuerProfile.issuerUrl" -otsv)"` -->
+1. Create the federated identity credential between the managed identity, service account issuer, and subject using the [az identity federated-credential create](https://learn.microsoft.com/en-us/cli/azure/identity/federated-credential#az-identity-federated-credential-create) command.
+`az identity federated-credential create --name ${FEDERATED_IDENTITY_CREDENTIAL_NAME} --identity-name ${ASSIGNED_MANAGED_IDENTITY_NAME} --resource-group ${RESOURCE_GROUP} --issuer ${AKS_OIDC_ISSUER} --subject system:serviceaccount:${SERVICE_ACCOUNT_NAMESPACE}:${SERVICE_ACCOUNT_NAME}`  
 ***Output:***  
 The variable should contain the *Issuer URL* similar to the following example, By default, the Issuer is set to use the base URL https://{region}.oic.prod-aks.azure.com, where the value for {region} matches the location the AKS cluster is deployed in:
     <span>https://eastus.oic.prod-aks.azure.com/00000000-0000-0000-0000-000000000000/00000000-0000-0000-0000-000000000000/</span>
 
-#### <a name="sixth"></a>F. Prepare the container image  
+#### <a name="sixth"></a>Prepare the container image  
 1. Configure ACR integration for an existing AKS cluster, Attach an ACR to an existing AKS cluster.
 > Integrate an existing ACR with an existing AKS cluster using the [az aks update](https://learn.microsoft.com/en-us/cli/azure/aks#az-aks-update) command with the [--attach-acr parameter](https://learn.microsoft.com/en-us/cli/azure/aks#az-aks-update-optional-parameters) and a valid value for acr-name or acr-resource-id. more details [here](https://learn.microsoft.com/en-us/azure/aks/cluster-container-registry-integration?tabs=azure-cli#configure-acr-integration-for-an-existing-aks-cluster).  
 
@@ -175,7 +185,7 @@ az acr build --image aks-skaler:latest --registry ${ACR_NAME} --file Dockerfile 
   --build-arg CLUSTER_NAME=${CLUSTER_NAME} \
   --file Dockerfile . -->
 
-#### <a name="seventh"></a>G. Deploy the workload  
+#### <a name="seventh"></a>Deploy the workload  
 
 1. Deploy a pod that references the service account created in the previous step using the following command.
 
@@ -219,7 +229,7 @@ spec:
 EOF
 ```
 
-#### <a name="seventha"></a>G.a. Deploy using GitHub action    
+#### <a name="seventha"></a>Deploy using GitHub action    
 > The Deploy to AKS (main.yaml) GitHub Action that uses the [aks-scaler-deployment.yaml](https://github.com/eladtpro/azure-aks-scaler/blob/main/.github/workflows/main.yml) file to deploy to an Azure AKS cluster:
 >
 > This GitHub Action is triggered on pushes to the main branch. It checks out the code, logs in to Azure using the AZURE_CREDENTIALS secret, sets up kubectl using the KUBECONFIG secret, and then deploys the aks-scaler-deployment.yaml file to the AKS cluster using kubectl apply.
