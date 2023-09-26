@@ -8,14 +8,10 @@
 > [Tutorial: Use a workload identity with an application on Azure Kubernetes Service (AKS)](https://learn.microsoft.com/en-us/azure/aks/learn/tutorial-kubernetes-workload-identity)  
 > [Getting started - Managing Container Service using Azure Python SDK](https://learn.microsoft.com/en-us/samples/azure-samples/azure-samples-python-management/containerservice/)
 
-### How does Workload Identity works
-In this security model, the AKS cluster acts as token issuer, Azure Active Directory uses OpenID Connect to discover public signing keys and verify the authenticity of the service account token before exchanging it for an Azure AD token. Your workload can exchange a service account token projected to its volume for an Azure AD token using the Azure Identity client library or the Microsoft Authentication Library.
-
-[![AKS Workload Identity Overview](assets/aks-workload-identity-model.png)](https://learn.microsoft.com/en-us/azure/aks/workload-identity-overview?tabs=python)
-
+---
 
 ### In this article
-
+&nbsp;&nbsp;&nbsp;&nbsp;[How does Workload Identity works](#how)  
 &nbsp;&nbsp;&nbsp;&nbsp;[Prepare the environment](#first)  
 &nbsp;&nbsp;&nbsp;&nbsp;[Enable OpenID Connect (OIDC) provider on existing AKS cluster](#second)  
 &nbsp;&nbsp;&nbsp;&nbsp;[Create a managed identity and grant permissions to access AKS control plane](#third)  
@@ -38,36 +34,48 @@ In this security model, the AKS cluster acts as token issuer, Azure Active Direc
 
 ---
 
+#### <a name="how"></a>How does Workload Identity works  
+In this security model, the AKS cluster acts as token issuer, Azure Active Directory uses OpenID Connect to discover public signing keys and verify the authenticity of the service account token before exchanging it for an Azure AD token. Your workload can exchange a service account token projected to its volume for an Azure AD token using the Azure Identity client library or the Microsoft Authentication Library.  
+
+[![AKS Workload Identity Overview](assets/aks-workload-identity-model.png)](https://learn.microsoft.com/en-us/azure/aks/workload-identity-overview?tabs=python)  
+
+---
+
 #### <a name="first"></a>Prepare the environment  
-##### Export environment variables  
-
-Static initalized Variables:  
+##### Environment variables (used by the python app)
 
 ```
-export RESOURCE_GROUP="myResourceGroup" \  
-export LOCATION="westcentralus" \  
-export CLUSTER_NAME="myManagedCluster" \  
-export SERVICE_ACCOUNT_NAMESPACE="default" \  
-export SERVICE_ACCOUNT_NAME="workload-identity-sa" \  
-export ASSIGNED_MANAGED_IDENTITY_NAME="aksSkalerIdentity" \  
-export FEDERATED_IDENTITY_CREDENTIAL_NAME="scalerFedIdentity" \  
-export ACR_NAME=acr4aksregistry  
-```
-<!-- export ASSIGNED_MANAGED_IDENTITY_PRINCIPAL_ID="$(az identity show --ids /subscriptions/"${SUBSCRIPTION_ID}"/resourceGroups/"${RESOURCE_GROUP}"/providers/Microsoft.ManagedIdentity/userAssignedIdentities/"${ASSIGNED_MANAGED_IDENTITY_NAME}" --query principalId)" \   -->
-
-
-Variables generated in the process:  
-```
-export ASSIGNED_MANAGED_IDENTITY_CLIENT_ID="$(az identity show --resource-group "${RESOURCE_GROUP}" --name "${ASSIGNED_MANAGED_IDENTITY_NAME}" --query 'clientId' -otsv)" \  
-export AKS_OIDC_ISSUER="$(az aks show -n myAKSCluster -g "${RESOURCE_GROUP}" --query "oidcIssuerProfile.issuerUrl" -otsv)" \  
+export SUBSCRIPTION_ID="$(az account show --query id --output tsv)" \
+export RESOURCE_GROUP="myResourceGroup" \
+export CLUSTER_NAME="myManagedCluster" \
+export NODE_POOLS_AMOUNT="{ \"manualpool2\": 5, \"manualpool3\": 5 }"
 ```
 
-App Registration Variables:  
+###### Static initalized Variables:  
+
 ```
-export AZURE_TENANT_ID=$(az account show --query tenantId -o tsv) \  
-export SUBSCRIPTION_ID="$(az account show --query id --output tsv)" \  
-export AZURE_CLIENT_ID="<from app registration>" \  
-export AZURE_CLIENT_SECRET="<from app registration>" \  
+LOCATION="westcentralus" \
+SERVICE_ACCOUNT_NAMESPACE="default" \
+SERVICE_ACCOUNT_NAME="workload-identity-sa" \
+ASSIGNED_MANAGED_IDENTITY_NAME="aksSkalerIdentity" \
+FEDERATED_IDENTITY_CREDENTIAL_NAME="scalerFedIdentity" \
+ACR_NAME=acr4aksregistry  
+```
+
+###### Variables generated in the process:  
+
+```
+ASSIGNED_MANAGED_IDENTITY_CLIENT_ID="$(az identity show --resource-group "${RESOURCE_GROUP}" --name "${ASSIGNED_MANAGED_IDENTITY_NAME}" --query 'clientId' -otsv)" \  
+AKS_OIDC_ISSUER="$(az aks show -n myAKSCluster -g "${RESOURCE_GROUP}" --query "oidcIssuerProfile.issuerUrl" -otsv)" \  
+KUBE_CONTEXT_NAME=$(kubectl config current-context)
+```
+
+###### App Registration Variables:  
+
+```
+export AZURE_TENANT_ID=$(az account show --query tenantId -o tsv) \
+export AZURE_CLIENT_ID="<from app registration>" \
+export AZURE_CLIENT_SECRET="<from app registration>" \
 ```
 
 ##### Login to Azure    
@@ -111,7 +119,7 @@ export AKS_OIDC_ISSUER="$(az aks show -n "${CLUSTER_NAME}" -g "${RESOURCE_GROUP}
 az identity create --name "${ASSIGNED_MANAGED_IDENTITY_NAME}" --resource-group "${RESOURCE_GROUP}" --location "${LOCATION}" --subscription "${SUBSCRIPTION_ID}"
 ```
 
-2. Set the CLIENT_ID environment variable:  
+2. Set the *CLIENT_ID* environment variable:  
 ```
 export ASSIGNED_MANAGED_IDENTITY_CLIENT_ID="$(az identity show --resource-group "${RESOURCE_GROUP}" --name "${ASSIGNED_MANAGED_IDENTITY_NAME}" --query 'clientId' -otsv)"
 ```
@@ -155,12 +163,6 @@ az role assignment create
   "updatedOn": "2023-09-26T08:14:10.492744+00:00"
 }
 ```
-
-<!-- `az role assignment create --assignee ${ASSIGNED_MANAGED_IDENTITY_NAME} --role "Azure Kubernetes Service RBAC Cluster Admin" --scope "/subscriptions/"${SUBSCRIPTION_ID}"/resourceGroups/"${RESOURCE_GROUP}"/providers/Microsoft.ContainerService/managedClusters/${CLUSTER_NAME}"` -->
-
-<!-- 5. Get the principal ID of managed identity using the [az identity show](https://learn.microsoft.com/en-us/cli/azure/identity#az_identity_show) command.
-`ASSIGNED_MANAGED_IDENTITY_PRINCIPAL_ID=$(az identity show --ids /subscriptions/"${SUBSCRIPTION_ID}"/resourceGroups/"${RESOURCE_GROUP}"/providers/Microsoft.ManagedIdentity/userAssignedIdentities/"${ASSIGNED_MANAGED_IDENTITY_NAME}" --query principalId)` -->
-
 
 > **Following the principle of lease priviliges we will try to give less permissions by using custom roles, in this case we will use the builtin *Azure Kubernetes Service RBAC Cluster Admin* role**.  
  
@@ -244,14 +246,16 @@ It may take a while for the newly created federated identity to apear on the *Fe
 
 
 #### <a name="sixth"></a>Prepare the container image
-###### <span style="color: maroon;">*Skip this section if a container registry already attached to the cluster and the container image uploaded.*</span>  
+###### <span style="color: maroon;">*Skip this section if a container registry already attached to the cluster and the container image already uploaded as well.*</span>  
 1. Configure ACR integration for an existing AKS cluster, Attach an ACR to an existing AKS cluster.
 > Integrate an existing ACR with an existing AKS cluster using the [az aks update](https://learn.microsoft.com/en-us/cli/azure/aks#az-aks-update) command with the [--attach-acr parameter](https://learn.microsoft.com/en-us/cli/azure/aks#az-aks-update-optional-parameters) and a valid value for acr-name or acr-resource-id. more details [here](https://learn.microsoft.com/en-us/azure/aks/cluster-container-registry-integration?tabs=azure-cli#configure-acr-integration-for-an-existing-aks-cluster).  
 
 ```
 # Attach using acr-name
 az aks update -n ${CLUSTER_NAME} -g ${RESOURCE_GROUP} --attach-acr ${ACR_NAME}
+```
 
+```
 # Attach using acr-resource-id
 az aks update -n ${CLUSTER_NAME} -g ${RESOURCE_GROUP} --attach-acr <acr-resource-id>
 ```
@@ -320,38 +324,32 @@ spec:
 EOF
 ```
 
-#### <a name="seventha"></a>Deploy using GitHub action    
-> The Deploy to AKS (main.yaml) GitHub Action that uses the [aks-scaler-deployment.yaml](https://github.com/eladtpro/azure-aks-scaler/blob/main/.github/workflows/main.yml) file to deploy to an Azure AKS cluster:
->
-> This GitHub Action is triggered on pushes to the main branch. It checks out the code, logs in to Azure using the AZURE_CREDENTIALS secret, sets up kubectl using the KUBECONFIG secret, and then deploys the aks-scaler-deployment.yaml file to the AKS cluster using kubectl apply.
->
-> To use this GitHub Action, you'll need to create the AZURE_CREDENTIALS and KUBECONFIG secrets in your repository. The AZURE_CREDENTIALS secret should contain your Azure service principal credentials in JSON format, and the KUBECONFIG secret should contain the contents of your Kubernetes configuration file.
+## <a name="seventha"></a>Deploy using GitHub action    
+![GitHub](assets/github-logo-png-png-813509.png)
 
-1. You can create these secrets in your repository by going to the "Settings" tab, clicking on "Secrets", and then clicking on "New repository secret".
-To create the *AZURE_CREDENTIALS* and KUBECONFIG secrets in your GitHub repository, you can follow these steps:
-     1. Open your GitHub repository in a web browser.
-     2. Click on the "Settings" tab.
-     3. Click on "Secrets" in the left-hand menu.
-     4. Click on "New repository secret".
-     5. In the "Name" field, enter *AZURE_CREDENTIALS*.
-     6. In the "Value" field, paste the contents of your Azure service principal credentials JSON file.
-     7. Click on "Add secret".
-     8. Click on "New repository secret" again.
-     9. In the "Name" field, enter *KUBECONFIG*.
-     10. In the "Value" field, paste the contents of your Kubernetes configuration file.
-     11. Click on "Add secret".
-2. Get the *AZURE_CREDENTIALS* value, We will create a service principal and configure its access to Azure resources using the [az ad sp create-for-rbac](https://learn.microsoft.com/en-us/cli/azure/ad/sp?view=azure-cli-latest#az-ad-sp-create-for-rbac()).
+> The deployment workflow to AKS uses GitHub Actions based on [main.yml](https://github.com/eladtpro/azure-aks-scaler/blob/main/.github/workflows/main.yml) file to deploy to an Azure AKS cluster.  
+> 
+> This GitHub Action is triggered on pushes to the main branch. It checks out the code, logs in to Azure using the ***AZURE_CREDENTIALS*** secret, sets up kubectl using the ***KUBECONFIG*** secret, and then deploys the aks-scaler-deployment.yaml file to the AKS cluster using kubectl apply.
+>
+> To use this GitHub Action, you'll need to create the *AZURE_CREDENTIALS* and *KUBECONFIG* secrets in your repository. The *AZURE_CREDENTIALS* secret should contain your Azure service principal credentials in JSON format, and the *KUBECONFIG* secret should contain the contents of your Kubernetes configuration file.
+
+#### Set the secrets
+
+
+1. Get the *AZURE_CREDENTIALS* value, We will create a service principal and configure its access to Azure resources using the [az ad sp create-for-rbac](https://learn.microsoft.com/en-us/cli/azure/ad/sp?view=azure-cli-latest#az-ad-sp-create-for-rbac()) which creates an ***App Registration*** resource.
 The output includes credentials that you must protect. Be sure that you do not include these credentials in your code or check the credentials into your source control. As an alternative, consider using managed identities if available to avoid the need to use credentials.  
 
+
+
 ```
+# create entity on the resource group level
 az ad sp create-for-rbac --name aks-scaler --role contributor --scopes /subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP}
 ```
-As an alternative we can use the cluster resource id:
 
-`az ad sp create-for-rbac --name aks-scaler --role "Azure Kubernetes Service RBAC Cluster Admin" --scopes /subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP}/providers/Microsoft.ContainerService/managedClusters/${CLUSTER_NAME}
-`  
-
-
+```
+# create entity on the aks cluster level
+az ad sp create-for-rbac --name aks-scaler --role "Azure Kubernetes Service RBAC Cluster Admin" --scopes /subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP}/providers/Microsoft.ContainerService/managedClusters/${CLUSTER_NAME}
+```  
 
 ***Output:***  
     ```
@@ -369,16 +367,34 @@ As an alternative we can use the cluster resource id:
     }  
     ```
 
-3. Get the *KUBECONFIG* secret value
-   1. First, get the context name:  
-   `kubectl config current-context`
-   2. Getting the config value:
-   `kubectl config view --minify --flatten --context=<CONTEXT_NAME>`
 
-4. GitHub Action Variables, GitHub sets default variables for each GitHub Actions workflow run. You can also set custom variables for use in a single workflow or multiple workflows.
+2. Get the *KUBECONFIG* secret value
+   1. First, get the context name:  
+   ```
+    KUBE_CONTEXT_NAME=$(kubectl config current-context)
+   ```
+   2. Getting the config value:
+    `kubectl config view --minify --flatten --context=${KUBE_CONTEXT_NAME}`
+
+
+3. Now you can create these secrets in your repository by going to the "Settings" tab, clicking on "Secrets", and then clicking on "New repository secret".
+To create the *AZURE_CREDENTIALS* and *KUBECONFIG* secrets in your GitHub repository, you can follow these steps:
+     1. Open your GitHub repository in a web browser.
+     2. Go to "Settings -> Secrets and variables -> Actions" tab.
+     3. Click on "New repository secret".
+     4. In the "Name" field, enter the name of the settings *AZURE_CREDENTIALS*/*KUBECONFIG*.
+     5. In the "Value" field, relativly, paste the contents of your Azure service principal credentials JSON or the contents of your Kubernetes configuration file.
+     6. Click on "Add secret" to complete the operataion.
+
+![GitHub Secrets](assets/github-secrets.png)
+
+
+#### Set the variables
+
+1. GitHub Action Variables, GitHub sets default variables for each GitHub Actions workflow run. You can also set custom variables for use in a single workflow or multiple workflows.
 > Variables provide a way to store and reuse non-sensitive configuration information. You can store any configuration data such as compiler flags, usernames, or server names as variables. Variables are interpolated on the runner machine that runs your workflow. Commands that run in actions or workflow steps can create, read, and modify variables.
 
-Variables can be accessed using the *vars* kewords, e.g *vars.RESOURCE_GROUP*, complete exsample in the action (workflow) file [main.yaml](https://github.com/eladtpro/azure-aks-scaler/blob/main/.github/workflows/main.yml)
+Variables can be accessed using the *vars* kewords, e.g ***vars.RESOURCE_GROUP***, complete exsample in the action (workflow) file [main.yaml](https://github.com/eladtpro/azure-aks-scaler/blob/main/.github/workflows/main.yml)
 ![AKS Scaling](assets/github-repo-vars.png)
 
 
@@ -406,12 +422,7 @@ Deploy the workload and verify authentication with the workload identity.</sub>
 [Authenticate with Azure Container Registry (ACR) from Azure Kubernetes Service (AKS)](https://learn.microsoft.com/en-us/azure/aks/cluster-container-registry-integration?tabs=azure-cli)
 <sub>When using [Azure Container Registry (ACR)](https://learn.microsoft.com/en-us/azure/container-registry/container-registry-intro) with Azure Kubernetes Service (AKS), you need to establish an authentication mechanism. You can configure the required permissions between ACR and AKS using the Azure CLI, Azure PowerShell, or Azure portal. This article provides examples to configure authentication between these Azure services using the Azure CLI or Azure PowerShell.</sub>
 
-
 ---  
-
-
-
-
 
 ##### Kubernetes  
 
