@@ -201,24 +201,50 @@ EOF
 > * Certificates expiring and service disruptions because of failed authentication.
 > 
 > **Federated identity credentials** are a new type of credential that enables workload identity federation for software workloads. Workload identity federation allows you to access Azure Active Directory (Azure AD) protected resources without needing to manage secrets (for supported scenarios).
+> ##### Why use workload identity federation?
+> [![Why use workload identity federation?](assets/federated_identiites_video.png)](https://learn.microsoft.com/en-us/azure/active-directory/workload-identities/workload-identity-federation#why-use-workload-identity-federation)
+> 
+> 
 > **Further Reading**: [Overview of federated identity credentials in Azure Active Directory](https://learn.microsoft.com/en-us/graph/api/resources/federatedidentitycredentials-overview?view=graph-rest-1.0)
 
 <!-- 1. Get the OIDC Issuer URL and save it to an environmental variable using the following command. Replace the default value for the arguments -n, which is the name of the cluster.  
 `export AKS_OIDC_ISSUER="$(az aks show -n "${CLUSTER_NAME}" -g "${RESOURCE_GROUP}" --query "oidcIssuerProfile.issuerUrl" -otsv)"` -->
 1. Create the federated identity credential between the managed identity, service account issuer, and subject using the [az identity federated-credential create](https://learn.microsoft.com/en-us/cli/azure/identity/federated-credential#az-identity-federated-credential-create) command.
 ```
-az identity federated-credential create \  
-  --name ${FEDERATED_IDENTITY_CREDENTIAL_NAME} \  
-  --identity-name ${ASSIGNED_MANAGED_IDENTITY_NAME} \  
-  --resource-group ${RESOURCE_GROUP} \  
-  --issuer ${AKS_OIDC_ISSUER} \  
-  --subject system:serviceaccount:${SERVICE_ACCOUNT_NAMESPACE}:${SERVICE_ACCOUNT_NAME}
+az identity federated-credential create \
+  --name ${FEDERATED_IDENTITY_CREDENTIAL_NAME} \
+  --identity-name ${ASSIGNED_MANAGED_IDENTITY_NAME} \
+  --resource-group ${RESOURCE_GROUP} \
+  --issuer ${AKS_OIDC_ISSUER} \
+  --subject system:serviceaccount:${SERVICE_ACCOUNT_NAMESPACE}:${SERVICE_ACCOUNT_NAME}  
 ```  
 ***Output:***  
-The variable should contain the *Issuer URL* similar to the following example, By default, the Issuer is set to use the base URL https://{region}.oic.prod-aks.azure.com, where the value for {region} matches the location the AKS cluster is deployed in:
-    <span>https://eastus.oic.prod-aks.azure.com/00000000-0000-0000-0000-000000000000/00000000-0000-0000-0000-000000000000/</span>
+> The variable should contain the ***Issuer URL*** similar to the following example, By default, the Issuer is set to use the base URL https://{region}.oic.prod-aks.azure.com, where the value for {region} matches the location the AKS cluster is deployed in:
+    <span>https://eastus.oic.prod-aks.azure.com/<Tenant_ID>/00000000-0000-0000-0000-000000000000/</span>  
 
-#### <a name="sixth"></a>Prepare the container image  
+```
+{
+  "audiences": [
+    "api://AzureADTokenExchange"
+  ],
+  "id": "/subscriptions/<Subscription Id>/resourcegroups/azure-kubernetes-service/providers/Microsoft.ManagedIdentity/userAssignedIdentities/aksSkalerIdentity/federatedIdentityCredentials/scalerFedIdentity",
+  "issuer": "https://<LOCATION>.oic.prod-aks.azure.com/<Tenant_ID>/cca5a7fa-1e4b-4bb2-9ba7-c7a6ac2df5e4/",
+  "name": "scalerFedIdentity",
+  "resourceGroup": "azure-kubernetes-service",
+  "subject": "system:serviceaccount:default:workload-identity-sa",
+  "systemData": null,
+  "type": "Microsoft.ManagedIdentity/userAssignedIdentities/federatedIdentityCredentials"
+}
+
+```
+
+It may take a while for the newly created federated identity to apear on the *Federated credentials* blade on the Manged Identity.  
+
+![Why use workload identity federation?](assets/federated-identity.png)]
+
+
+#### <a name="sixth"></a>Prepare the container image
+###### <span style="color: maroon;">*Skip this section if a container registry already attached to the cluster and the container image uploaded.*</span>  
 1. Configure ACR integration for an existing AKS cluster, Attach an ACR to an existing AKS cluster.
 > Integrate an existing ACR with an existing AKS cluster using the [az aks update](https://learn.microsoft.com/en-us/cli/azure/aks#az-aks-update) command with the [--attach-acr parameter](https://learn.microsoft.com/en-us/cli/azure/aks#az-aks-update-optional-parameters) and a valid value for acr-name or acr-resource-id. more details [here](https://learn.microsoft.com/en-us/azure/aks/cluster-container-registry-integration?tabs=azure-cli#configure-acr-integration-for-an-existing-aks-cluster).  
 
@@ -356,13 +382,10 @@ Variables can be accessed using the *vars* kewords, e.g *vars.RESOURCE_GROUP*, c
 
 ---
 
-## Further Reading:
-[Use Azure AD workload identity with Azure Kubernetes Service (AKS)](https://learn.microsoft.com/en-us/azure/aks/workload-identity-overview?tabs=python)  
-<sub>Workloads deployed on an Azure Kubernetes Services (AKS) cluster require Azure Active Directory (Azure AD) application credentials or managed identities to access Azure AD protected resources, such as Azure Key Vault and Microsoft Graph. Azure AD workload identity integrates with the capabilities native to Kubernetes to federate with external identity providers.</sub>
+## Further Reading:  
 
-[What are workload identities?](https://learn.microsoft.com/en-us/azure/active-directory/workload-identities/workload-identities-overview)  
-<sub>A workload identity is an identity you assign to a software workload (such as an application, service, script, or container) to authenticate and access other services and resources. The terminology is inconsistent across the industry, but generally a workload identity is something you need for your software entity to authenticate with some system. For example, in order for GitHub Actions to access Azure subscriptions the action needs a workload identity which has access to those subscriptions. A workload identity could also be an AWS service role attached to an EC2 instance with read-only access to an Amazon S3 bucket.
-In Microsoft Entra, workload identities are applications, service principals, and managed identities.</sub>
+##### Azure Kubernetes Service (AKS)  
+
 
 [ServiceAccount token volume projection](https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/#serviceaccount-token-volume-projection)  
 <sub>The kubelet can also project a ServiceAccount token into a Pod. You can specify desired properties of the token, such as the audience and the validity duration. These properties are not configurable on the default ServiceAccount token. The token will also become invalid against the API when either the Pod or the ServiceAccount is deleted.</sub>
@@ -375,17 +398,52 @@ Create an Azure Active Directory (Azure AD) workload identity and Kubernetes ser
 Configure the managed identity for token federation.
 Deploy the workload and verify authentication with the workload identity.</sub>
 
-[Assign a managed identity access to a resource using Azure CLI](https://learn.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/howto-assign-access-cli#next-steps)  
-<sub>Managed identities for Azure resources is a feature of Azure Active Directory. Each of the [Azure services that support managed identities for Azure resources](https://learn.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/services-support-managed-identities) are subject to their own timeline. Make sure you review the [availability](https://learn.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/services-support-managed-identities) status of managed identities for your resource and [known issues](https://learn.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/known-issues) before you begin.</sub>
-
 [Use a managed identity in Azure Kubernetes Service (AKS)](https://learn.microsoft.com/en-us/azure/aks/use-managed-identity)  
 <sub>Azure Kubernetes Service (AKS) clusters require an identity to access Azure resources like load balancers and managed disks. This identity can be a managed identity or service principal. A system-assigned managed identity is automatically created when you create an AKS cluster. This identity is managed by the Azure platform and doesn't require you to provision or rotate any secrets. For more information about managed identities in Azure AD, see [Managed identities for Azure resources](https://learn.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview).</sub>
 
 [Authenticate with Azure Container Registry (ACR) from Azure Kubernetes Service (AKS)](https://learn.microsoft.com/en-us/azure/aks/cluster-container-registry-integration?tabs=azure-cli)
 <sub>When using [Azure Container Registry (ACR)](https://learn.microsoft.com/en-us/azure/container-registry/container-registry-intro) with Azure Kubernetes Service (AKS), you need to establish an authentication mechanism. You can configure the required permissions between ACR and AKS using the Azure CLI, Azure PowerShell, or Azure portal. This article provides examples to configure authentication between these Azure services using the Azure CLI or Azure PowerShell.</sub>
 
+
+---  
+
+
+
+
+
+##### Kubernetes  
+
+[Distribute Credentials Securely Using Secrets](https://kubernetes.io/docs/tasks/inject-data-application/distribute-credentials-secure/)
+<sub>This page shows how to securely inject sensitive data, such as passwords and encryption keys, into Pods.  
+</sub>
+
+---  
+
+##### Identity (Azure)  
+
+[Use Azure AD workload identity with Azure Kubernetes Service (AKS)](https://learn.microsoft.com/en-us/azure/aks/workload-identity-overview?tabs=python)  
+<sub>Workloads deployed on an Azure Kubernetes Services (AKS) cluster require Azure Active Directory (Azure AD) application credentials or managed identities to access Azure AD protected resources, such as Azure Key Vault and Microsoft Graph. Azure AD workload identity integrates with the capabilities native to Kubernetes to federate with external identity providers.</sub>
+
+[What are workload identities?](https://learn.microsoft.com/en-us/azure/active-directory/workload-identities/workload-identities-overview)  
+<sub>A workload identity is an identity you assign to a software workload (such as an application, service, script, or container) to authenticate and access other services and resources. The terminology is inconsistent across the industry, but generally a workload identity is something you need for your software entity to authenticate with some system. For example, in order for GitHub Actions to access Azure subscriptions the action needs a workload identity which has access to those subscriptions. A workload identity could also be an AWS service role attached to an EC2 instance with read-only access to an Amazon S3 bucket.
+In Microsoft Entra, workload identities are applications, service principals, and managed identities.</sub>
+
+[Assign a managed identity access to a resource using Azure CLI](https://learn.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/howto-assign-access-cli#next-steps)  
+<sub>Managed identities for Azure resources is a feature of Azure Active Directory. Each of the [Azure services that support managed identities for Azure resources](https://learn.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/services-support-managed-identities) are subject to their own timeline. Make sure you review the [availability](https://learn.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/services-support-managed-identities) status of managed identities for your resource and [known issues](https://learn.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/known-issues) before you begin.</sub>
+
+---  
+
+##### Azure Container Registry (ACR)  
+
 [Push your first image to your Azure container registry using the Docker CLI](https://learn.microsoft.com/en-us/azure/container-registry/container-registry-get-started-docker-cli?tabs=azure-cli)  
 <sub>An Azure container registry stores and manages private container images and other artifacts, similar to the way [Docker Hub](https://hub.docker.com/) stores public Docker container images. You can use the [Docker command-line interface](https://docs.docker.com/engine/reference/commandline/cli/) (Docker CLI) for [login](https://docs.docker.com/engine/reference/commandline/login/), [push](https://docs.docker.com/engine/reference/commandline/push/), [pull](https://docs.docker.com/engine/reference/commandline/pull/), and other container image operations on your container registry.</sub>
 
 [Quickstart: Build and run a container image using Azure Container Registry Tasks](https://learn.microsoft.com/en-us/azure/container-registry/container-registry-quickstart-task-cli)  
 <sub>In this quickstart, you use [Azure Container Registry Tasks](https://learn.microsoft.com/en-us/azure/container-registry/container-registry-tasks-overview) commands to quickly build, push, and run a Docker container image natively within Azure, without a local Docker installation. ACR Tasks is a suite of features within Azure Container Registry to help you manage and modify container images across the container lifecycle. This example shows how to offload your "inner-loop" container image development cycle to the cloud with on-demand builds using a local Dockerfile.</sub>
+
+---
+
+##### Tooling  
+
+[VALIDKUBE](https://validkube.com/)  
+<sub>ValidKube combines the best open-source tools to help ensure Kubernetes YAML best practices, hygiene & security.</sub>
