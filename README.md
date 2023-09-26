@@ -34,6 +34,8 @@
 
 ---
 
+
+![Exclamation mark](assets/exclamation-mark.png)  
 #### <a name="how"></a>How does Workload Identity works  
 In this security model, the AKS cluster acts as token issuer, Azure Active Directory uses OpenID Connect to discover public signing keys and verify the authenticity of the service account token before exchanging it for an Azure AD token. Your workload can exchange a service account token projected to its volume for an Azure AD token using the Azure Identity client library or the Microsoft Authentication Library.  
 
@@ -109,6 +111,7 @@ export AKS_OIDC_ISSUER="$(az aks show -n "${CLUSTER_NAME}" -g "${RESOURCE_GROUP}
 ```
 
 #### <a name="third"></a>Create a managed identity and grant permissions to access AKS control plane
+![Exclamation mark](assets/exclamation-mark.png)
 > Azure Kubernetes Service (AKS) needs an identity for accessing Azure resources like load balancers and disks, which can be a [managed identity](https://learn.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview) or service principal. A system-assigned managed identity is auto-generated and managed by Azure, while a [service principal](https://learn.microsoft.com/en-us/azure/aks/kubernetes-service-principal) must be created manually. Service principals expire and require renewal, making managed identities a simpler choice. Both have the same permission requirements and use certificate-based authentication. Managed identities have 90-day credentials that roll every 45 days. AKS supports both system-assigned and user-assigned managed identities, which are immutable.  
 > **Further Reading**:
 > [Assign a managed identity access to a resource using Azure CLI](https://learn.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/howto-assign-access-cli)
@@ -196,6 +199,7 @@ EOF
     `Serviceaccount/workload-identity-sa created`  
 
 #### <a name="fifth"></a>Establish federated identity credential  
+![Exclamation mark](assets/exclamation-mark.png)
 > Traditionally, developers use certificates or client secrets for their application's credentials to authenticate with and access services in Azure AD. To access the services in their Azure AD tenant, developers have had to store and manage application credentials outside Azure, introducing the following bottlenecks:
 >  
 > * A maintenance burden for certificates and secrets.
@@ -326,6 +330,7 @@ EOF
 
 ## <a name="seventha"></a>Deploy using GitHub action    
 ![GitHub](assets/github-logo-png-png-813509.png)
+![Exclamation mark](assets/exclamation-mark.png)
 
 > The deployment workflow to AKS uses GitHub Actions based on [main.yml](https://github.com/eladtpro/azure-aks-scaler/blob/main/.github/workflows/main.yml) file to deploy to an Azure AKS cluster.  
 > 
