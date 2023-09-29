@@ -377,7 +377,7 @@ The output includes credentials that you must protect. Be sure that you do not i
 
 ```
 # create entity on the resource group level
-az ad sp create-for-rbac --name aks-scaler --role contributor --scopes /subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP}
+az ad sp create-for-rbac --name aks-scaler --role contributor --scopes /subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP} --json-auth
 ```
 
 <!-- ```
@@ -388,12 +388,26 @@ az ad sp create-for-rbac --name aks-scaler --role "Azure Kubernetes Service RBAC
 ***Output:***  
     ```
     {  
-      "appId": "00000000-0000-0000-0000-000000000000",  
-      "displayName": "aks-scaler",  
-      "password": "<PASSWORD>",  
-      "tenant": "00000000-0000-0000-0000-000000000000"  
-    }  
+      "clientId": "00000000-0000-0000-0000-000000000000",  
+      "clientSecret": "<SECRET>",  
+      "subscriptionId": "00000000-0000-0000-0000-000000000000",  
+      "tenantId": "00000000-0000-0000-0000-000000000000",  
+      "activeDirectoryEndpointUrl": "https://login.microsoftonline.com",  
+      "resourceManagerEndpointUrl": "https://management.azure.com/",  
+      "activeDirectoryGraphResourceId": "https://graph.windows.net/",  
+      "sqlManagementEndpointUrl": "https://management.core.windows.net:8443/",  
+      "galleryEndpointUrl": "https://gallery.azure.com/",  
+      "managementEndpointUrl": "https://management.core.windows.net/"  
+    }
     ```
+> You can test the above login credentials using:
+> ```
+> az login --service-principal
+>   --username <clientId>
+>   --password <clientSecret>
+>   --tenant <tenantId>
+> ```
+
 
 
 <!-- 2. Get the *KUBECONFIG* secret value
