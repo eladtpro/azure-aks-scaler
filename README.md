@@ -334,7 +334,7 @@ EOF
 
 > The deployment workflow to [Azure Kubernetes Service (AKS)](https://learn.microsoft.com/en-us/azure/aks/intro-kubernetes) uses GitHub Actions based on [main.yml](https://github.com/eladtpro/azure-aks-scaler/blob/main/.github/workflows/main.yml) file to deploy to an Azure AKS cluster.  
 > 
-> This GitHub Action is triggered on pushes to the main branch. It checks out the code, logs in to Azure using the ***AZURE_CREDENTIALS*** secret (will be explained in detail below), and then deploys the main.yaml file to the AKS cluster using kubectl apply.
+> This GitHub Action is triggered on pushes to the main branch. It checks out the code, logs in to Azure using the ***AZURE_CREDENTIALS*** and to the Azure Kubernetes Service (AKS) using the ***KUBECONFIG*** secrets (will be explained in detail below), and then deploys the main.yaml file to the AKS cluster using kubectl apply.
 >
 > To use this GitHub Action, you'll need to create the *AZURE_CREDENTIALS* secret in your repository. The *AZURE_CREDENTIALS* secret should contain your Azure service principal credentials in JSON format.
 
@@ -364,26 +364,18 @@ You can use multiple Kubernetes actions to deploy to containers from Azure Conta
 | azure/aks-set-context@v3  | Set the target AKS cluster context for other actions to use or run any kubectl commands.   | [azure/aks-set-context](https://github.com/Azure/aks-set-context)  |
 | azure/setup-kubectl@v3    | Install a specific version of kubectl on the runner.  | [azure/setup-kubectl](https://github.com/Azure/setup-kubectl)  |
 | Azure/k8s-deploy@v4       | Deploy manifests to Kubernetes clusters.  | [	azure/setup-kubectl](https://github.com/Azure/setup-kubectl)   |
-
-<!-- | azure/use-kubelogin@v1    |   |   | -->
+| azure/use-kubelogin@v1    | This action helps you to setup kubelogin in your GitHub Actions workflow. | [azure/use-kubelogin](https://github.com/Azure/use-kubelogin#azureuse-kubelogin)  |
 
 #### Set repository secrets
 
 
-1. Get the *AZURE_CREDENTIALS* value, We will create a service principal and configure its access to Azure resources using the [az ad sp create-for-rbac](https://learn.microsoft.com/en-us/cli/azure/ad/sp?view=azure-cli-latest#az-ad-sp-create-for-rbac()) which creates a [service principle object](https://learn.microsoft.com/en-us/azure/active-directory/develop/app-objects-and-service-principals?tabs=azure-cli) that can access Azure resources (Azure App Registration).
+1. **Get the *AZURE_CREDENTIALS* value**, We will create a service principal and configure its access to Azure resources using the [az ad sp create-for-rbac](https://learn.microsoft.com/en-us/cli/azure/ad/sp?view=azure-cli-latest#az-ad-sp-create-for-rbac()) which creates a [service principle object](https://learn.microsoft.com/en-us/azure/active-directory/develop/app-objects-and-service-principals?tabs=azure-cli) that can access Azure resources (Azure App Registration).
 The output includes credentials that you must protect. Be sure that you do not include these credentials in your code or check the credentials into your source control. As an alternative, consider using managed identities if available to avoid the need to use credentials.  
-
-
 
 ```
 # create entity on the resource group level
 az ad sp create-for-rbac --name aks-scaler --role contributor --scopes /subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP} --json-auth
 ```
-
-<!-- ```
-# create entity on the aks cluster level
-az ad sp create-for-rbac --name aks-scaler --role "Azure Kubernetes Service RBAC Cluster Admin" --scopes /subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP}/providers/Microsoft.ContainerService/managedClusters/${CLUSTER_NAME}
-```   -->
 
 ***Output:***  
     ```
@@ -408,15 +400,15 @@ az ad sp create-for-rbac --name aks-scaler --role "Azure Kubernetes Service RBAC
 >   --tenant <tenantId>
 > ```
 
-
-
-<!-- 2. Get the *KUBECONFIG* secret value
+2. **Get the *KUBECONFIG* secret value**,
    1. First, get the context name:  
    ```
     KUBE_CONTEXT_NAME=$(kubectl config current-context)
    ```
    2. Getting the config value:
-    `kubectl config view --minify --flatten --context=${KUBE_CONTEXT_NAME}` -->
+    ```
+    kubectl config view --minify --flatten --context=${KUBE_CONTEXT_NAME}
+    ```
 
 
 2. Now you can create these secrets in your repository by going to the "Settings" tab, clicking on "Secrets", and then clicking on "New repository secret".
@@ -427,6 +419,7 @@ To create the *AZURE_CREDENTIALS* secret in your GitHub repository, you can foll
      4. In the "Name" field, enter the name of the setting: *AZURE_CREDENTIALS*.
      5. In the "Value" field, paste the contents of your Azure service principal credentials JSON (as shown in the output above).
      6. Click on "Add secret" to complete the operataion.
+     7. **repeat 1-6 steps for the *KUBECONFIG* secret.**
 
 ![GitHub Secrets](assets/github-secrets.png)
 
