@@ -31,19 +31,37 @@
 
 ##### Identities
 
-In this solution we are using three kind of identities, listed in the table below,
-We have the main workload identity being used by the AKS cluster, we have it's equivelent for local developent,  
-Also we have the GitHub CI/CD workflow agent identity.
+This solution utilizes three types of identities, as listed in the table below.  
+The first is the primary workload identity *Managed Identity*, utilized by the AKS cluster, followed by its counterpart *Service Principal* for local development.  
+Lastly, we have the identity as *Application* (App Registration) of the GitHub CI/CD workflow agent.  
 
 | Aim | Name     | Kind | Role  | Scope  | Command  |
 |---|---|---|---|---|---|
 | AKS pod Workload Identity | *ASSIGNED_MANAGED_IDENTITY_NAME*  | Managed Identity       | Azure Kubernetes Service RBAC Cluster Admin | AKS Cluster    | `az identity create --name "${ASSIGNED_MANAGED_IDENTITY_NAME}" --resource-group "${RESOURCE_GROUP}" --location "${LOCATION}" --subscription "${SUBSCRIPTION_ID}"` |
 | Local Development         | *aks-scaler*                      | Enterprise Application | Contributor                                 | AKS Cluster    | `az ad sp create-for-rbac --name aks-scaler --role contributor --scopes /subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP}/providers/Microsoft.ContainerService/managedClusters/${CLUSTER_NAME} --json-auth` |
-| GitHub Actions            | *AZURE_CREDENTIALS*               | App Registration       | Contributor                                 | Resource Group |  `az ad app create --display-name myApp` <br/> `az ad sp create --id $appId` <br/> `az role assignment create --role contributor --subscription ${SUBSCRIPTION_ID} --assignee-object-id  $assigneeObjectId --assignee-principal-type ServicePrincipal --scope /subscriptions/${SUBSCRIPTION_ID}/resourceGroups/"${RESOURCE_GROUP}"` |
+| GitHub Actions            | *AZURE_CREDENTIALS*               | App Registration       | Contributor                                 | Resource Group |  `az ad app create --display-name aks-scaler` <br/> `az ad sp create --id $appId` <br/> `az role assignment create --role contributor --subscription ${SUBSCRIPTION_ID} --assignee-object-id  $assigneeObjectId --assignee-principal-type ServicePrincipal --scope /subscriptions/${SUBSCRIPTION_ID}/resourceGroups/"${RESOURCE_GROUP}"` |
 
 
-
-Diif between app registration and enterprise registration
+> The az [ad sp create-for-rbac](https://learn.microsoft.com/en-us/cli/azure/ad/sp?view=azure-cli-latest#az-ad-sp-create-for-rbac()) and [az ad app create](https://learn.microsoft.com/en-us/cli/azure/ad/app?view=azure-cli-latest#az-ad-app-create()) commands in the Azure CLI serve different purposes and have distinct functionalities:
+>
+> 1. [`az ad sp create-for-rbac`](https://learn.microsoft.com/en-us/cli/azure/ad/sp?view=azure-cli-latest#az-ad-sp-create-for-rbac())  
+> **Purpose**: This command is used to create a service principal (SP) that can be used for Azure Role-Based Access Control (RBAC).  
+Service principals are used to authenticate applications and services to Azure resources.
+> **Functionality**: It creates a service principal, assigns it a role,  
+and generates credentials (usually a client secret or certificate) that the application or service can use for authentication and authorization when interacting with Azure resources.  
+> **Typical Use Case**: You use this command when you want to create a service principal specifically for granting permissions to your application or service to access Azure resources.  
+>  
+> 2. [`az ad app create`](https://learn.microsoft.com/en-us/cli/azure/ad/app?view=azure-cli-latest#az-ad-app-create())  
+> **Purpose**: This command is used to create an Azure AD application registration.  
+An application registration represents your custom application in Azure AD, and it's used to configure various aspects of your application's behavior, including authentication settings, permissions, and redirect URIs.  
+**Functionality**: It creates an Azure AD application registration, which is not the same as a service principal.  
+An application registration is a prerequisite for creating a service principal, and it defines the configuration and characteristics of your application within Azure AD.  
+**Typical Use Case**: You use this command when you want to register your custom application with Azure AD.  
+After registering the application, you can then create a service principal for it using the `az ad sp create --id $appId` command if you need to grant it specific permissions for Azure resources.  
+>  
+> **In summary**,  
+The main difference is that `az ad sp create-for-rbac` is focused on creating a service principal specifically for RBAC and resource access,  
+While `az ad app create` is focused on creating an application registration within Azure AD, which is a prerequisite for creating service principals and configuring other application-related settings.  
 
 
 ---
@@ -515,6 +533,9 @@ In Microsoft Entra, workload identities are applications, service principals, an
 
 [Create a Microsoft Entra application and service principal that can access resources](https://learn.microsoft.com/en-us/azure/active-directory/develop/howto-create-service-principal-portal)
 <sub>In this article, you'll learn how to create a Microsoft Entra application and service principal that can be used with the role-based access control. When you register a new application in Microsoft Entra ID, a service principal is automatically created for the app registration. The service principal is the app's identity in the Microsoft Entra tenant. Access to resources is restricted by the roles assigned to the service principal, giving you control over which resources can be accessed and at which level. For security reasons, it's always recommended to use service principals with automated tools rather than allowing them to sign in with a user identity.</sub>
+
+[Application and service principal objects in Microsoft Entra ID](https://learn.microsoft.com/en-us/azure/active-directory/develop/app-objects-and-service-principals?tabs=azure-cli)
+<sub>This article describes application registration, application objects, and service principals in Microsoft Entra ID, what they are, how they're used, and how they're related to each other. A multi-tenant example scenario is also presented to illustrate the relationship between an application's application object and corresponding service principal objects.</sub>
 
 [Application and service principal objects in Microsoft Entra ID](https://learn.microsoft.com/en-us/azure/active-directory/develop/app-objects-and-service-principals?tabs=azure-cli)
 <sub>This article describes application registration, application objects, and service principals in Microsoft Entra ID, what they are, how they're used, and how they're related to each other. A multi-tenant example scenario is also presented to illustrate the relationship between an application's application object and corresponding service principal objects.</sub>
