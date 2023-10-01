@@ -1,7 +1,7 @@
-![AKS Scaling](assets/Azure-Kubernetes-Service.jpg)
+![Workload Identity](assets/Azure-Kubernetes-Service.jpg)
 
 *Azure AKS Scaler*
-# Azure Kubernetes Service (AKS) Workload Identity
+# Azure Kubernetes Service (AKS) *Workload Identity* Walkthrough
 > Azure Kubernetes Service (AKS) Workload Identity is a feature that allows Kubernetes pods to authenticate with Azure services using their own identities, instead of using a service principal. This provides a more secure and streamlined way to access Azure resources from within a Kubernetes cluster.  
 >
 
@@ -87,7 +87,16 @@ export CLUSTER_NAME="myManagedCluster" \
 export NODE_POOLS_AMOUNT="{ \"manualpool2\": 5, \"manualpool3\": 5 }"
 ```
 
-###### Static initalized Variables:  
+###### Azure Python SDK Variables:  
+
+```
+export AZURE_TENANT_ID=$(az account show --query tenantId -o tsv) \
+export AZURE_CLIENT_ID="$(az)" \
+export AZURE_CLIENT_SECRET="<from app registration>" \
+```
+
+
+###### Custom variables:  
 
 ```
 LOCATION="westcentralus" \
@@ -102,16 +111,8 @@ ACR_NAME=acr4aksregistry
 
 ```
 ASSIGNED_MANAGED_IDENTITY_CLIENT_ID="$(az identity show --resource-group "${RESOURCE_GROUP}" --name "${ASSIGNED_MANAGED_IDENTITY_NAME}" --query 'clientId' -otsv)" \  
-AKS_OIDC_ISSUER="$(az aks show -n myAKSCluster -g "${RESOURCE_GROUP}" --query "oidcIssuerProfile.issuerUrl" -otsv)" \  
+AKS_OIDC_ISSUER="$(az aks show -n ${CLUSTER_NAME} -g "${RESOURCE_GROUP}" --query "oidcIssuerProfile.issuerUrl" -otsv)" \  
 KUBE_CONTEXT_NAME=$(kubectl config current-context)
-```
-
-###### App Registration Variables:  
-
-```
-export AZURE_TENANT_ID=$(az account show --query tenantId -o tsv) \
-export AZURE_CLIENT_ID="<from app registration>" \
-export AZURE_CLIENT_SECRET="<from app registration>" \
 ```
 
 ##### Login to Azure    
