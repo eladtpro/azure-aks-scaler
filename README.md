@@ -41,15 +41,14 @@ We will run them later in the process.
 | Aim | Kind | Role  | Scope  | Command  | Variable /Name     |
 |---|---|---|---|---|---|
 | AKS pod Workload Identity | Managed Identity  service principal | Azure Kubernetes Service RBAC Cluster Admin | AKS Cluster    | `az identity create --name "${ASSIGNED_MANAGED_IDENTITY_NAME}" --resource-group "${RESOURCE_GROUP}" --location "${LOCATION}" --subscription "${SUBSCRIPTION_ID}"` | *ASSIGNED_MANAGED_IDENTITY_NAME* |
-| Local Development         | Application service principal       | Contributor                                 | AKS Cluster    | `az ad sp create-for-rbac --name aks-scaler --role contributor --scopes /subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP}/providers/Microsoft.ContainerService/managedClusters/${CLUSTER_NAME} --json-auth` | *aks-scaler* |
-| GitHub Actions            | Application service principal       | Contributor                                 | Resource Group |  `az ad app create --display-name aks-scaler` <br/> `az ad sp create --id $appId` <br/> `az role assignment create --role contributor --subscription ${SUBSCRIPTION_ID} --assignee-object-id  $assigneeObjectId --assignee-principal-type ServicePrincipal --scope /subscriptions/${SUBSCRIPTION_ID}/resourceGroups/"${RESOURCE_GROUP}"` | *AZURE_CREDENTIALS* |
+| GitHub Actions            | Application service principal       | Contributor                                 | Resource Group | `az ad app create --display-name aks-scaler` <br/> `az ad sp create --id $appId` <br/> `az role assignment create --role contributor --subscription ${SUBSCRIPTION_ID} --assignee-object-id  $assigneeObjectId --assignee-principal-type ServicePrincipal --scope /subscriptions/${SUBSCRIPTION_ID}/resourceGroups/"${RESOURCE_GROUP}"` | *AZURE_CREDENTIALS* |
+| Local Development         | Application service principal       | Azure Kubernetes Service RBAC Cluster Admin | AKS Cluster    | `az ad sp create-for-rbac --name aks-scaler --role contributor --scopes /subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP}/providers/Microsoft.ContainerService/managedClusters/${CLUSTER_NAME} --json-auth` <br/> or <br/> `az role assignment create --role contributor --subscription ${SUBSCRIPTION_ID} --assignee-object-id  $assigneeObjectId --assignee-principal-type ServicePrincipal --scope /subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP}/providers/Microsoft.ContainerService/managedClusters/${CLUSTER_NAME}`  | *aks-scaler* |
 
 
 > The az [ad sp create-for-rbac](https://learn.microsoft.com/en-us/cli/azure/ad/sp?view=azure-cli-latest#az-ad-sp-create-for-rbac()) and [az ad app create](https://learn.microsoft.com/en-us/cli/azure/ad/app?view=azure-cli-latest#az-ad-app-create()) commands in the Azure CLI serve different purposes and have distinct functionalities:
 >
 > 1. [`az ad sp create-for-rbac`](https://learn.microsoft.com/en-us/cli/azure/ad/sp?view=azure-cli-latest#az-ad-sp-create-for-rbac())  
-> **Purpose**: This command is used to create a service principal (SP) that can be used for Azure Role-Based Access Control (RBAC).  
-Service principals are used to authenticate applications and services to Azure resources.
+> **Purpose**: Create a service principal and configure its access to Azure resources.
 > **Functionality**: It creates a service principal, assigns it a role,  
 and generates credentials (usually a client secret or certificate) that the application or service can use for authentication and authorization when interacting with Azure resources.  
 > **Typical Use Case**: You use this command when you want to create a service principal specifically for granting permissions to your application or service to access Azure resources.  
