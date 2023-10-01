@@ -35,6 +35,9 @@ This solution utilizes three types of identities, as listed in the table below.
 The first is the primary workload identity *Managed Identity*, utilized by the AKS cluster, followed by its counterpart *Service Principal* for local development.  
 Lastly, we have the identity as *Application* (App Registration) of the GitHub CI/CD workflow agent.  
 
+###### <span style="color: maroon;"></span>  
+
+
 | Aim | Kind | Role  | Scope  | Command  | Variable /Name     |
 |---|---|---|---|---|---|
 | AKS pod Workload Identity | Managed Identity       | Azure Kubernetes Service RBAC Cluster Admin | AKS Cluster    | `az identity create --name "${ASSIGNED_MANAGED_IDENTITY_NAME}" --resource-group "${RESOURCE_GROUP}" --location "${LOCATION}" --subscription "${SUBSCRIPTION_ID}"` | *ASSIGNED_MANAGED_IDENTITY_NAME* |
@@ -281,7 +284,7 @@ It may take a while for the newly created federated identity to apear on the *Fe
 ![Why use workload identity federation?](assets/federated-identity.png)]
 
 
-#### <a name="sixth"></a>Prepare the container image
+#### <a name="sixth"></a>Prepare container image
 ###### <span style="color: maroon;">*Skip this section if a container registry already attached to the cluster and the container image already uploaded as well.*</span>  
 1. Configure ACR integration for an existing AKS cluster, Attach an ACR to an existing AKS cluster.
 > Integrate an existing ACR with an existing AKS cluster using the [az aks update](https://learn.microsoft.com/en-us/cli/azure/aks#az-aks-update) command with the [--attach-acr parameter](https://learn.microsoft.com/en-us/cli/azure/aks#az-aks-update-optional-parameters) and a valid value for acr-name or acr-resource-id. more details [here](https://learn.microsoft.com/en-us/azure/aks/cluster-container-registry-integration?tabs=azure-cli#configure-acr-integration-for-an-existing-aks-cluster).  
@@ -533,9 +536,6 @@ In Microsoft Entra, workload identities are applications, service principals, an
 
 [Create a Microsoft Entra application and service principal that can access resources](https://learn.microsoft.com/en-us/azure/active-directory/develop/howto-create-service-principal-portal)
 <sub>In this article, you'll learn how to create a Microsoft Entra application and service principal that can be used with the role-based access control. When you register a new application in Microsoft Entra ID, a service principal is automatically created for the app registration. The service principal is the app's identity in the Microsoft Entra tenant. Access to resources is restricted by the roles assigned to the service principal, giving you control over which resources can be accessed and at which level. For security reasons, it's always recommended to use service principals with automated tools rather than allowing them to sign in with a user identity.</sub>
-
-[Application and service principal objects in Microsoft Entra ID](https://learn.microsoft.com/en-us/azure/active-directory/develop/app-objects-and-service-principals?tabs=azure-cli)
-<sub>This article describes application registration, application objects, and service principals in Microsoft Entra ID, what they are, how they're used, and how they're related to each other. A multi-tenant example scenario is also presented to illustrate the relationship between an application's application object and corresponding service principal objects.</sub>
 
 [Application and service principal objects in Microsoft Entra ID](https://learn.microsoft.com/en-us/azure/active-directory/develop/app-objects-and-service-principals?tabs=azure-cli)
 <sub>This article describes application registration, application objects, and service principals in Microsoft Entra ID, what they are, how they're used, and how they're related to each other. A multi-tenant example scenario is also presented to illustrate the relationship between an application's application object and corresponding service principal objects.</sub>
