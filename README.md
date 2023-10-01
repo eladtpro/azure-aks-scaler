@@ -35,11 +35,11 @@ This solution utilizes three types of identities, as listed in the table below.
 The first is the primary workload identity *Managed Identity*, utilized by the AKS cluster, followed by its counterpart *Service Principal* for local development.  
 Lastly, we have the identity as *Application* (App Registration) of the GitHub CI/CD workflow agent.  
 
-| Aim | Name     | Kind | Role  | Scope  | Command  |
+| Aim | Kind | Role  | Scope  | Command  | Variable /Name     |
 |---|---|---|---|---|---|
-| AKS pod Workload Identity | *ASSIGNED_MANAGED_IDENTITY_NAME*  | Managed Identity       | Azure Kubernetes Service RBAC Cluster Admin | AKS Cluster    | `az identity create --name "${ASSIGNED_MANAGED_IDENTITY_NAME}" --resource-group "${RESOURCE_GROUP}" --location "${LOCATION}" --subscription "${SUBSCRIPTION_ID}"` |
-| Local Development         | *aks-scaler*                      | Enterprise Application | Contributor                                 | AKS Cluster    | `az ad sp create-for-rbac --name aks-scaler --role contributor --scopes /subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP}/providers/Microsoft.ContainerService/managedClusters/${CLUSTER_NAME} --json-auth` |
-| GitHub Actions            | *AZURE_CREDENTIALS*               | App Registration       | Contributor                                 | Resource Group |  `az ad app create --display-name aks-scaler` <br/> `az ad sp create --id $appId` <br/> `az role assignment create --role contributor --subscription ${SUBSCRIPTION_ID} --assignee-object-id  $assigneeObjectId --assignee-principal-type ServicePrincipal --scope /subscriptions/${SUBSCRIPTION_ID}/resourceGroups/"${RESOURCE_GROUP}"` |
+| AKS pod Workload Identity | Managed Identity       | Azure Kubernetes Service RBAC Cluster Admin | AKS Cluster    | `az identity create --name "${ASSIGNED_MANAGED_IDENTITY_NAME}" --resource-group "${RESOURCE_GROUP}" --location "${LOCATION}" --subscription "${SUBSCRIPTION_ID}"` | *ASSIGNED_MANAGED_IDENTITY_NAME* |
+| Local Development         | Enterprise Application | Contributor                                 | AKS Cluster    | `az ad sp create-for-rbac --name aks-scaler --role contributor --scopes /subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP}/providers/Microsoft.ContainerService/managedClusters/${CLUSTER_NAME} --json-auth` | *aks-scaler* |
+| GitHub Actions            | App Registration       | Contributor                                 | Resource Group |  `az ad app create --display-name aks-scaler` <br/> `az ad sp create --id $appId` <br/> `az role assignment create --role contributor --subscription ${SUBSCRIPTION_ID} --assignee-object-id  $assigneeObjectId --assignee-principal-type ServicePrincipal --scope /subscriptions/${SUBSCRIPTION_ID}/resourceGroups/"${RESOURCE_GROUP}"` | *AZURE_CREDENTIALS* |
 
 
 > The az [ad sp create-for-rbac](https://learn.microsoft.com/en-us/cli/azure/ad/sp?view=azure-cli-latest#az-ad-sp-create-for-rbac()) and [az ad app create](https://learn.microsoft.com/en-us/cli/azure/ad/app?view=azure-cli-latest#az-ad-app-create()) commands in the Azure CLI serve different purposes and have distinct functionalities:
