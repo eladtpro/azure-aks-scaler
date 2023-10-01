@@ -36,3 +36,9 @@ class AzureConfig:
     def CLUSTER_NAME(cls):
         # Get the value of the CLUSTER_NAME environment variable
         return os.getenv("CLUSTER_NAME")
+    
+    @classmethod
+    @property
+    def AZURE_CLIENT_ID(cls):
+        # Get the value of the CLIENT_ID environment variable
+        return os.getenv("AZURE_CLIENT_ID")

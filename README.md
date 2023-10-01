@@ -4,9 +4,6 @@
 # Azure Kubernetes Service (AKS) Workload Identity
 > Azure Kubernetes Service (AKS) Workload Identity is a feature that allows Kubernetes pods to authenticate with Azure services using their own identities, instead of using a service principal. This provides a more secure and streamlined way to access Azure resources from within a Kubernetes cluster.  
 >
-> *Based on*:
-> [Tutorial: Use a workload identity with an application on Azure Kubernetes Service (AKS)](https://learn.microsoft.com/en-us/azure/aks/learn/tutorial-kubernetes-workload-identity)  
-> [Getting started - Managing Container Service using Azure Python SDK](https://learn.microsoft.com/en-us/samples/azure-samples/azure-samples-python-management/containerservice/)
 
 ---
 
@@ -25,11 +22,28 @@
 
 ##### Prerequisites
 
- * If you don't have an [Azure subscription](https://learn.microsoft.com/en-us/azure/guides/developer/azure-developer-guide#understanding-accounts-subscriptions-and-billing), create an [Azure free account](https://azure.microsoft.com/free/?ref=microsoft.com&utm_source=microsoft.com&utm_medium=docs&utm_campaign=visualstudio) before you begin.  
+* If you don't have an [Azure subscription](https://learn.microsoft.com/en-us/azure/guides/developer/azure-developer-guide#understanding-accounts-subscriptions-and-billing), create an [Azure free account](https://azure.microsoft.com/free/?ref=microsoft.com&utm_source=microsoft.com&utm_medium=docs&utm_campaign=visualstudio) before you begin.  
 * AKS supports Azure AD workload identities on version 1.22 and higher.
 * The Azure CLI version 2.47.0 or later. Run az --version to find the version, and run az upgrade to upgrade the version. If you need to install or upgrade, see [Install Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli).
 * The identity you use to create your cluster must have the appropriate minimum permissions. For more information on access and identity for AKS, see Access and identity options for [Azure Kubernetes Service (AKS)](https://learn.microsoft.com/en-us/azure/aks/concepts-identity).  
 * If you have multiple Azure subscriptions, select the appropriate subscription ID in which the resources should be billed using the [az account](https://learn.microsoft.com/en-us/cli/azure/account) command.
+* Bash terminal
+
+##### Identities
+
+In this solution we are using three kind of identities, listed in the table below,
+We have the main workload identity being used by the AKS cluster, we have it's equivelent for local developent,  
+Also we have the GitHub CI/CD workflow agent identity.
+
+| Aim | Name     | Kind | Role  | Scope  | Command  |
+|---|---|---|---|---|---|
+| AKS pod Workload Identity | *ASSIGNED_MANAGED_IDENTITY_NAME*  | Managed Identity       | Azure Kubernetes Service RBAC Cluster Admin | AKS Cluster    | `az identity create --name "${ASSIGNED_MANAGED_IDENTITY_NAME}" --resource-group "${RESOURCE_GROUP}" --location "${LOCATION}" --subscription "${SUBSCRIPTION_ID}"` |
+| Local Development         | *aks-scaler*                      | Enterprise Application | Contributor                                 | AKS Cluster    | `az ad sp create-for-rbac --name aks-scaler --role contributor --scopes /subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP}/providers/Microsoft.ContainerService/managedClusters/${CLUSTER_NAME} --json-auth` |
+| GitHub Actions            | *AZURE_CREDENTIALS*               | App Registration       | Contributor                                 | Resource Group |  `az ad app create --display-name myApp` <br/> `az ad sp create --id $appId` <br/> `az role assignment create --role contributor --subscription ${SUBSCRIPTION_ID} --assignee-object-id  $assigneeObjectId --assignee-principal-type ServicePrincipal --scope /subscriptions/${SUBSCRIPTION_ID}/resourceGroups/"${RESOURCE_GROUP}"` |
+
+
+
+Diif between app registration and enterprise registration
 
 
 ---
@@ -458,10 +472,6 @@ For more information about configuring the workflow events, see [Events that tri
 
 ##### Azure Kubernetes Service (AKS)  
 
-
-[ServiceAccount token volume projection](https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/#serviceaccount-token-volume-projection)  
-<sub>The kubelet can also project a ServiceAccount token into a Pod. You can specify desired properties of the token, such as the audience and the validity duration. These properties are not configurable on the default ServiceAccount token. The token will also become invalid against the API when either the Pod or the ServiceAccount is deleted.</sub>
-
 [Tutorial: Use a workload identity with an application on Azure Kubernetes Service (AKS)](https://learn.microsoft.com/en-us/azure/aks/learn/tutorial-kubernetes-workload-identity#create-a-managed-identity-and-grant-permissions-to-access-the-secret)  
 <sub>Azure Kubernetes Service (AKS) is a managed Kubernetes service that lets you quickly deploy and manage Kubernetes clusters. In this tutorial, you:
 Deploy an AKS cluster using the Azure CLI with OpenID Connect (OIDC) Issuer and managed identity.
@@ -469,6 +479,9 @@ Create an Azure Key Vault and secret.
 Create an Azure Active Directory (Azure AD) workload identity and Kubernetes service account.
 Configure the managed identity for token federation.
 Deploy the workload and verify authentication with the workload identity.</sub>
+
+[Getting started - Managing Container Service using Azure Python SDK](https://learn.microsoft.com/en-us/samples/azure-samples/azure-samples-python-management/containerservice/)
+<sub>These code samples will show you how to manage Container Service using Azure SDK for Python.</sub>
 
 [Use a managed identity in Azure Kubernetes Service (AKS)](https://learn.microsoft.com/en-us/azure/aks/use-managed-identity)  
 <sub>Azure Kubernetes Service (AKS) clusters require an identity to access Azure resources like load balancers and managed disks. This identity can be a managed identity or service principal. A system-assigned managed identity is automatically created when you create an AKS cluster. This identity is managed by the Azure platform and doesn't require you to provision or rotate any secrets. For more information about managed identities in Azure AD, see [Managed identities for Azure resources](https://learn.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview).</sub>
@@ -481,8 +494,10 @@ Deploy the workload and verify authentication with the workload identity.</sub>
 ##### Kubernetes  
 
 [Distribute Credentials Securely Using Secrets](https://kubernetes.io/docs/tasks/inject-data-application/distribute-credentials-secure/)
-<sub>This page shows how to securely inject sensitive data, such as passwords and encryption keys, into Pods.  
-</sub>
+<sub>This page shows how to securely inject sensitive data, such as passwords and encryption keys, into Pods.</sub>
+
+[ServiceAccount token volume projection](https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/#serviceaccount-token-volume-projection)  
+<sub>The kubelet can also project a ServiceAccount token into a Pod. You can specify desired properties of the token, such as the audience and the validity duration. These properties are not configurable on the default ServiceAccount token. The token will also become invalid against the API when either the Pod or the ServiceAccount is deleted.</sub>
 
 ---  
 
@@ -518,6 +533,10 @@ In Microsoft Entra, workload identities are applications, service principals, an
 
 ##### GitHub
 
+[Use GitHub Actions to connect to Azure](https://learn.microsoft.com/en-us/azure/developer/github/connect-from-azure?tabs=azure-cli%2Clinux)
+<sub>Learn how to use Azure login with either [Azure PowerShell](https://github.com/Azure/PowerShell) or [Azure CLI](https://github.com/Azure/CLI) to interact with your Azure resources.  
+To use Azure PowerShell or Azure CLI in a GitHub Actions workflow, you need to first log in with the [Azure login](https://github.com/marketplace/actions/azure-login) action.</sub>
+
 [GitHub Actions for deploying to Azure - Azure Login](https://github.com/marketplace/actions/azure-login)
 <sub>With the [Azure Login](https://github.com/Azure/login/blob/master/action.yml) Action, you can do an Azure login using [Azure Managed Identities and Azure service principal](https://learn.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview#managed-identity-types) to run Az CLI and Azure PowerShell scripts.</sub>
 
@@ -532,8 +551,12 @@ In Microsoft Entra, workload identities are applications, service principals, an
 
 ---
 
+##### Python
+
+[Microsoft Azure SDK for Python](https://learn.microsoft.com/en-us/python/api/overview/azure/mgmt-containerservice-readme?view=azure-python)
+<sub>This is the Microsoft Azure Container Service Management Client Library. This package has been tested with Python 3.7+. For a more complete view of Azure libraries, see the [azure sdk python release](https://aka.ms/azsdk/python/all).</sub>
+
 ##### Tooling  
 
 [VALIDKUBE](https://validkube.com/)  
 <sub>ValidKube combines the best open-source tools to help ensure Kubernetes YAML best practices, hygiene & security.</sub>
-
