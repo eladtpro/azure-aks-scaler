@@ -5,19 +5,16 @@
 > Azure Kubernetes Service (AKS) Workload Identity is a feature that allows Kubernetes pods to authenticate with Azure services using their own identities, instead of using a service principal. This provides a more secure and streamlined way to access Azure resources from within a Kubernetes cluster.  
 >
 
----
-
-### In this article
-&nbsp;&nbsp;&nbsp;&nbsp;[How does Workload Identity works](#how)  
-&nbsp;&nbsp;&nbsp;&nbsp;[Prepare the environment](#first)  
-&nbsp;&nbsp;&nbsp;&nbsp;[Enable OpenID Connect (OIDC) provider on existing AKS cluster](#second)  
-&nbsp;&nbsp;&nbsp;&nbsp;[Create a managed identity and grant permissions to access AKS control plane](#third)  
-&nbsp;&nbsp;&nbsp;&nbsp;[Create Kubernetes service account](#forth)  
-&nbsp;&nbsp;&nbsp;&nbsp;[Establish federated identity credential](#fifth)  
-&nbsp;&nbsp;&nbsp;&nbsp;[Prepare the container image](#sixth)  
-&nbsp;&nbsp;&nbsp;&nbsp;[Deploy the workload (CLI)](#seventh)  
-&nbsp;&nbsp;&nbsp;&nbsp;[Deploy the workload (GitHub Actions)](#seventha)  
-
+## In this article
+* [How does Workload Identity works](#how)  
+* [Initialize Variables](#first)  
+* [Enable OpenID Connect (OIDC) provider on existing AKS cluster](#second)  
+* [Create a managed identity and grant permissions to access AKS control plane](#third)  
+* [Create Kubernetes service account](#forth)  
+* [Establish federated identity credential](#fifth)  
+* [Prepare the container image](#sixth)  
+* [Deploy the workload (CLI)](#seventh)  
+* [Deploy the workload (GitHub Actions)](#seventha)  
 
 
 ##### Prerequisites
@@ -29,7 +26,20 @@
 * If you have multiple Azure subscriptions, select the appropriate subscription ID in which the resources should be billed using the [az account](https://learn.microsoft.com/en-us/cli/azure/account) command.
 * Bash terminal
 
-##### Identities
+#### <a name="how"></a>How does Workload Identity works  
+In this security model, the AKS cluster acts as token issuer, Azure Active Directory uses OpenID Connect to discover public signing keys and verify the authenticity of the service account token before exchanging it for an Azure AD token. Your workload can exchange a service account token projected to its volume for an Azure AD token using the Azure Identity client library or the Microsoft Authentication Library.  
+
+[![AKS Workload Identity Overview](assets/aks-workload-identity-model.png)](https://learn.microsoft.com/en-us/azure/aks/workload-identity-overview?tabs=python)  
+
+##Preps
+
+###### Login to Azure    
+
+Before using any Azure CLI commands with a local install, you need to sign in with [az login](https://learn.microsoft.com/en-us/cli/azure/reference-index#az-login).  
+
+`az login`
+
+#### Identities
 
 This solution utilizes three types of identities, as listed in the table below.  
 The first is the primary workload identity *Managed Identity*, utilized by the AKS cluster, followed by its counterpart *Service Principal* for local development.  
@@ -65,19 +75,9 @@ After registering the application, you can then create a service principal for i
 The main difference is that `az ad sp create-for-rbac` is focused on creating a service principal specifically for RBAC and resource access,  
 While `az ad app create` is focused on creating an application registration within Azure AD, which is a prerequisite for creating service principals and configuring other application-related settings.  
 
-
 ---
 
-
-![Exclamation mark](assets/exclamation-mark.png)  
-#### <a name="how"></a>How does Workload Identity works  
-In this security model, the AKS cluster acts as token issuer, Azure Active Directory uses OpenID Connect to discover public signing keys and verify the authenticity of the service account token before exchanging it for an Azure AD token. Your workload can exchange a service account token projected to its volume for an Azure AD token using the Azure Identity client library or the Microsoft Authentication Library.  
-
-[![AKS Workload Identity Overview](assets/aks-workload-identity-model.png)](https://learn.microsoft.com/en-us/azure/aks/workload-identity-overview?tabs=python)  
-
----
-
-#### <a name="first"></a>Prepare the environment  
+#### <a name="first"></a>Initialize Variables  
 ###### Environment variables (used by the python app)
 
 ```
@@ -115,11 +115,6 @@ AKS_OIDC_ISSUER="$(az aks show -n ${CLUSTER_NAME} -g "${RESOURCE_GROUP}" --query
 KUBE_CONTEXT_NAME=$(kubectl config current-context)
 ```
 
-##### Login to Azure    
-
-Before using any Azure CLI commands with a local install, you need to sign in with [az login](https://learn.microsoft.com/en-us/cli/azure/reference-index#az-login).  
-
-`az login`
 
 #### <a name="second"></a>Enable OpenID Connect (OIDC) provider on existing AKS cluster  
 > [OpenID Connect (OIDC)](https://learn.microsoft.com/en-us/azure/active-directory/fundamentals/auth-oidc) extends OAuth 2.0 for authentication via Azure AD. It enables SSO on Azure Kubernetes Service (AKS) using an ID token. AKS can automatically rotate keys or do it manually. Token lifetime is one day.
@@ -146,7 +141,6 @@ export AKS_OIDC_ISSUER="$(az aks show -n "${CLUSTER_NAME}" -g "${RESOURCE_GROUP}
 ```
 
 #### <a name="third"></a>Create a managed identity and grant permissions to access AKS control plane
-![Exclamation mark](assets/exclamation-mark.png)
 > Azure Kubernetes Service (AKS) needs an identity for accessing Azure resources like load balancers and disks, which can be a [managed identity](https://learn.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview) or service principal. A system-assigned managed identity is auto-generated and managed by Azure, while a [service principal](https://learn.microsoft.com/en-us/azure/aks/kubernetes-service-principal) must be created manually. Service principals expire and require renewal, making managed identities a simpler choice. Both have the same permission requirements and use certificate-based authentication. Managed identities have 90-day credentials that roll every 45 days. AKS supports both system-assigned and user-assigned managed identities, which are immutable.  
 > **Further Reading**:
 > [Assign a managed identity access to a resource using Azure CLI](https://learn.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/howto-assign-access-cli)
