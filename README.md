@@ -6,15 +6,15 @@
 >
 
 ## In this article
-* [How does Workload Identity works](#how)  
-* [Initialize Variables](#first)  
-* [Enable OpenID Connect (OIDC) provider on existing AKS cluster](#second)  
-* [Create a managed identity and grant permissions to access AKS control plane](#third)  
-* [Create Kubernetes service account](#forth)  
-* [Establish federated identity credential](#fifth)  
-* [Prepare the container image](#sixth)  
-* [Deploy the workload (CLI)](#seventh)  
-* [Deploy the workload (GitHub Actions)](#seventha)  
+| &nbsp;&nbsp;&nbsp;&nbsp;[How does Workload Identity works](#how)  
+| &nbsp;&nbsp;&nbsp;&nbsp;[Initialize Variables](#first)  
+| &nbsp;&nbsp;&nbsp;&nbsp;[Enable OpenID Connect (OIDC) provider on existing AKS cluster](#second)  
+| &nbsp;&nbsp;&nbsp;&nbsp;[Create a managed identity and grant permissions to access AKS control plane](#third)  
+| &nbsp;&nbsp;&nbsp;&nbsp;[Create Kubernetes service account](#forth)  
+| &nbsp;&nbsp;&nbsp;&nbsp;[Establish federated identity credential](#fifth)  
+| &nbsp;&nbsp;&nbsp;&nbsp;[Prepare the container image](#sixth)  
+| &nbsp;&nbsp;&nbsp;&nbsp;[Deploy the workload (CLI)](#seventh)  
+| &nbsp;&nbsp;&nbsp;&nbsp;[Deploy the workload (GitHub Actions)](#seventha)  
 
 
 ##### Prerequisites
