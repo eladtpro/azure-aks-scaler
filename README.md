@@ -5,12 +5,12 @@
 >
 
 ## In this article
-| &nbsp;&nbsp;&nbsp;&nbsp;[How does Workload Identity works](#how)  
+| &nbsp;&nbsp;&nbsp;&nbsp;[How does Workload Identity work](#how)  
 | &nbsp;&nbsp;&nbsp;&nbsp;[Identities](#ids)  
 | &nbsp;&nbsp;&nbsp;&nbsp;[Initialize Variables](#first)  
 | &nbsp;&nbsp;&nbsp;&nbsp;[Enable OpenID Connect (OIDC) provider on existing AKS cluster](#second)  
-| &nbsp;&nbsp;&nbsp;&nbsp;[Create a managed identity and grant permissions to access AKS control plane](#third)  
-| &nbsp;&nbsp;&nbsp;&nbsp;[Create Kubernetes service account](#forth)  
+| &nbsp;&nbsp;&nbsp;&nbsp;[Create a managed identity and grant permissions to access the AKS control plane](#third)  
+| &nbsp;&nbsp;&nbsp;&nbsp;[Create a Kubernetes service account](#forth)  
 | &nbsp;&nbsp;&nbsp;&nbsp;[Establish federated identity credential](#fifth)  
 | &nbsp;&nbsp;&nbsp;&nbsp;[Prepare the container image](#sixth)  
 | &nbsp;&nbsp;&nbsp;&nbsp;[Deploy the workload (CLI)](#seventh)  
@@ -21,13 +21,13 @@
 
 * If you don't have an [Azure subscription](https://learn.microsoft.com/en-us/azure/guides/developer/azure-developer-guide#understanding-accounts-subscriptions-and-billing), create an [Azure free account](https://azure.microsoft.com/free/?ref=microsoft.com&utm_source=microsoft.com&utm_medium=docs&utm_campaign=visualstudio) before you begin.  
 * AKS supports Azure AD workload identities on version 1.22 and higher.
-* The Azure CLI version 2.47.0 or later. Run az --version to find the version, and run az upgrade to upgrade the version. If you need to install or upgrade, see [Install Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli).
+* The Azure CLI version is 2.47.0 or later. Run az --version to find the version, and run az upgrade to upgrade the version. If you need to install or upgrade, see [Install Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli).
 * The identity you use to create your cluster must have the appropriate minimum permissions. For more information on access and identity for AKS, see Access and identity options for [Azure Kubernetes Service (AKS)](https://learn.microsoft.com/en-us/azure/aks/concepts-identity).  
 * If you have multiple Azure subscriptions, select the appropriate subscription ID in which the resources should be billed using the [az account](https://learn.microsoft.com/en-us/cli/azure/account) command.
 * Bash terminal
 
-### <a name="how"></a>How does Workload Identity works  
-In this security model, the AKS cluster acts as token issuer, Azure Active Directory uses OpenID Connect to discover public signing keys and verify the authenticity of the service account token before exchanging it for an Azure AD token. Your workload can exchange a service account token projected to its volume for an Azure AD token using the Azure Identity client library or the Microsoft Authentication Library.  
+### <a name="how"></a>How does Workload Identity work  
+In this security model, the AKS cluster acts as a token issuer, Azure Active Directory uses OpenID Connect to discover public signing keys and verify the authenticity of the service account token before exchanging it for an Azure AD token. Your workload can exchange a service account token projected to its volume for an Azure AD token using the Azure Identity client library or the Microsoft Authentication Library.  
 
 [![AKS Workload Identity Overview](assets/aks-workload-identity-model.png)](https://learn.microsoft.com/en-us/azure/aks/workload-identity-overview?tabs=python)  
 
@@ -70,7 +70,7 @@ and generates credentials (usually a client secret or certificate) that the appl
 > **Purpose**: This command is used to create an Azure AD application registration.  
 An application registration represents your custom application in Azure AD, and it's used to configure various aspects of your application's behavior, including authentication settings, permissions, and redirect URIs.  
 **Functionality**: It creates an Azure AD application registration, which is not the same as a service principal.  
-An application registration is a prerequisite for creating a service principal, and it defines the configuration and characteristics of your application within Azure AD.  
+Application registration is a prerequisite for creating a service principal, and it defines the configuration and characteristics of your application within Azure AD.  
 **Typical Use Case**: You use this command when you want to register your custom application with Azure AD.  
 After registering the application, you can then create a service principal for it using the `az ad sp create --id $appId` command if you need to grant it specific permissions for Azure resources.  
 >  
@@ -146,7 +146,7 @@ az aks show -n "${CLUSTER_NAME}" -g "${RESOURCE_GROUP}" --query "oidcIssuerProfi
 export AKS_OIDC_ISSUER="$(az aks show -n "${CLUSTER_NAME}" -g "${RESOURCE_GROUP}" --query "oidcIssuerProfile.issuerUrl" -otsv)"
 ```
 
-### <a name="third"></a>Create a managed identity and grant permissions to access AKS control plane
+### <a name="third"></a>Create a managed identity and grant permissions to access the AKS control plane
 > Azure Kubernetes Service (AKS) needs an identity for accessing Azure resources like load balancers and disks, which can be a [managed identity](https://learn.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview) or service principal. A system-assigned managed identity is auto-generated and managed by Azure, while a [service principal](https://learn.microsoft.com/en-us/azure/aks/kubernetes-service-principal) must be created manually. Service principals expire and require renewal, making managed identities a simpler choice. Both have the same permission requirements and use certificate-based authentication. Managed identities have 90-day credentials that roll every 45 days. AKS supports both system-assigned and user-assigned managed identities, which are immutable.  
 > **Further Reading**:
 > [Assign a managed identity access to a resource using Azure CLI](https://learn.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/howto-assign-access-cli)
@@ -206,7 +206,7 @@ az role assignment create
  
 
 
-### <a name="forth"></a>Create Kubernetes service account  
+### <a name="forth"></a>Create a Kubernetes service account  
 
 Create a Kubernetes service account and annotate it with the client ID of the managed identity created in the previous step using the [az aks get-credentials](https://learn.microsoft.com/en-us/cli/azure/aks#az-aks-get-credentials) command. Replace the default value for the cluster name and the resource group name.  
 
