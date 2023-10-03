@@ -1,3 +1,4 @@
+import os
 from azure.mgmt.containerservice import ContainerServiceClient
 from azure.identity import ManagedIdentityCredential, DefaultAzureCredential
 
