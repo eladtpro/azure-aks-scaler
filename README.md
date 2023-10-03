@@ -14,7 +14,8 @@
 | &nbsp;&nbsp;&nbsp;&nbsp;[Establish federated identity credential](#fifth)  
 | &nbsp;&nbsp;&nbsp;&nbsp;[Prepare the container image](#sixth)  
 | &nbsp;&nbsp;&nbsp;&nbsp;[Deploy the workload (CLI)](#seventh)  
-| &nbsp;&nbsp;&nbsp;&nbsp;[Deploy the workload (GitHub Actions)](#seventha)  
+| &nbsp;&nbsp;&nbsp;&nbsp;[Local Development](#local)  
+| &nbsp;&nbsp;&nbsp;&nbsp;[Deploy the workload (GitHub Actions)](#github)  
 
 
 ##### Prerequisites
@@ -48,9 +49,9 @@ Lastly, we have the identity as ***Application*** (App Registration) of the GitH
 
 | Aim | Kind | Role  | Scope  | Variable /Name     |
 |---|---|---|---|---|
-| AKS pod Workload Identity | Managed Identity  service principal | Azure Kubernetes Service RBAC Cluster Admin | AKS Cluster    | *ASSIGNED_MANAGED_IDENTITY_NAME* |
-| GitHub Actions            | Application service principal       | Contributor                                 | Resource Group | *AZURE_CREDENTIALS* |
-| Local Development         | Application service principal       | Azure Kubernetes Service RBAC Cluster Admin | AKS Cluster    | *aks-scaler* |
+| [AKS pod Workload Identity](#third) | Managed Identity  service principal | Azure Kubernetes Service RBAC Cluster Admin | AKS Cluster    | *ASSIGNED_MANAGED_IDENTITY_NAME* |
+| [GitHub Actions](#github)             | Application service principal       | Contributor                                 | Resource Group | *AZURE_CREDENTIALS* |
+| [Local Development](#local)          | Application service principal       | Azure Kubernetes Service RBAC Cluster Admin | AKS Cluster    | *aks-scaler* |
 
 <!-- 
 `az identity create --name "${ASSIGNED_MANAGED_IDENTITY_NAME}" --resource-group "${RESOURCE_GROUP}" --location "${LOCATION}" --subscription "${SUBSCRIPTION_ID}"`
@@ -365,14 +366,32 @@ EOF
 
 ### <a name="test"></a>Test the app:
 
-`curl -X GET "http://127.0.0.1:5000/scale?config={"manualpool2":2,"manualpool3":2}"`
+```
+curl -X GET "http://127.0.0.1:5000/scale?config={"manualpool2":2,"manualpool3":2}"
+```
 
 ```
 http://127.0.0.1:5000/scale?config={"manualpool2":2,"manualpool3":2}
 ```
 
+## <a name="local"></a>Local Development
 
-## <a name="seventha"></a>Deploy the workload (GitHub Actions)    
+For local development all we need is the set a `.env` file with the following values:
+
+```
+AZURE_TENANT_ID=xxx
+AZURE_CLIENT_ID=xxx
+AZURE_CLIENT_SECRET=xxx
+SUBSCRIPTION_ID=xxx
+
+NODE_POOLS_AMOUNT={ "manualpool2": 2, "manualpool3": 2 }
+RESOURCE_GROUP=xxx
+CLUSTER_NAME=xxx
+```
+
+
+
+## <a name="github"></a>Deploy the workload (GitHub Actions)    
 ![GitHub](assets/github-logo-png-png-813509.png)
 ![Exclamation mark](assets/exclamation-mark.png)
 
