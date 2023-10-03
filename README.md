@@ -118,7 +118,7 @@ AKS_OIDC_ISSUER="$(az aks show -n ${CLUSTER_NAME} -g "${RESOURCE_GROUP}" --query
 KUBE_CONTEXT_NAME=$(kubectl config current-context)
 ```
 
-> To change the output format to tab separated values (TSV), add `-o tsv` (`--output tsv` or `-otsv`) to a command.  
+> To change the output format to tab-separated values (TSV), add `-o tsv` (`--output tsv` or `-otsv`) to a command.  
 > This format is useful for loading information into spreadsheets, or for other machine processing.  
 
 
@@ -126,7 +126,7 @@ KUBE_CONTEXT_NAME=$(kubectl config current-context)
 > [OpenID Connect (OIDC)](https://learn.microsoft.com/en-us/azure/active-directory/fundamentals/auth-oidc) extends OAuth 2.0 for authentication via Azure AD. It enables SSO on Azure Kubernetes Service (AKS) using an ID token. AKS can automatically rotate keys or do it manually. Token lifetime is one day.
 > This section teaches you how to create, update, and manage the OIDC Issuer for your cluster.
 >
-> **Warning**: Enabling OIDC Issuer on an existing cluster may cause downtime and API server restarts. If app pods fail, manually restart them.
+> **Warning**: Enabling the OIDC Issuer on an existing cluster may cause downtime and API server restarts. If app pods fail, manually restart them.
 > 
 > **Important**: Once enabled, OIDC cannot be disabled.
 > **Further Reading**: [Create an OpenID Connect provider on Azure Kubernetes Service (AKS)](https://learn.microsoft.com/en-us/azure/aks/use-oidc-issuer)
@@ -202,7 +202,7 @@ az role assignment create
 }
 ```
 
-> **Following the principle of lease priviliges we will try to give less permissions by using custom roles, in this case we will use the builtin *Azure Kubernetes Service RBAC Cluster Admin* role**.  
+> **Following the principle of lease privileges we will try to give fewer permissions by using custom roles, in this case, we will use the built-in *Azure Kubernetes Service RBAC Cluster Admin* role**.  
  
 
 
@@ -279,13 +279,13 @@ az identity federated-credential create \
 
 ```
 
-It may take a while for the newly created federated identity to apear on the *Federated credentials* blade on the Manged Identity.  
+It may take a while for the newly created federated identity to appear on the *Federated credentials* blade on the Managed Identity.  
 
 ![Why use workload identity federation?](assets/federated-identity.png)]
 
 
 ### <a name="sixth"></a>Prepare container image
-###### <span style="color: maroon;">*Skip this section if a container registry already attached to the cluster and the container image already uploaded as well.*</span>  
+###### <span style="color: maroon;">*Skip this section if a container registry is already attached to the cluster and the container image has already been uploaded as well.*</span>  
 1. Configure ACR integration for an existing AKS cluster, Attach an ACR to an existing AKS cluster.
 > Integrate an existing ACR with an existing AKS cluster using the [az aks update](https://learn.microsoft.com/en-us/cli/azure/aks#az-aks-update) command with the [--attach-acr parameter](https://learn.microsoft.com/en-us/cli/azure/aks#az-aks-update-optional-parameters) and a valid value for acr-name or acr-resource-id. more details [here](https://learn.microsoft.com/en-us/azure/aks/cluster-container-registry-integration?tabs=azure-cli#configure-acr-integration-for-an-existing-aks-cluster).  
 
@@ -299,19 +299,19 @@ az aks update -n ${CLUSTER_NAME} -g ${RESOURCE_GROUP} --attach-acr ${ACR_NAME}
 az aks update -n ${CLUSTER_NAME} -g ${RESOURCE_GROUP} --attach-acr <acr-resource-id>
 ```
 
-2. Log in to a registry, The recommended method when working in a command line is with the Azure CLI command az acr login. For example, to access a registry named myregistry, sign in the Azure CLI and then authenticate to your registry:
+2. Log in to a registry, The recommended method when working in a command line is with the Azure CLI command az acr login. For example, to access a registry named myregistry, sign in to Azure CLI and then authenticate to your registry:
 
 `az acr login --name ${ACR_NAME} --expose-token`
 
-3. Build and push image from a Dockerfile 
-> Run the [az acr build](https://learn.microsoft.com/en-us/cli/azure/acr#az_acr_build) command, which builds the image and, after the image is successfully built, pushes it to your registry. The following example builds and pushes the aks-skaler:latest image. The . at the end of the command sets the location of the Dockerfile, in this case the current directory.
+3. Build and push the image from a Dockerfile 
+> Run the [az acr build](https://learn.microsoft.com/en-us/cli/azure/acr#az_acr_build) command, which builds the image and, after the image is successfully built, pushes it to your registry. The following example builds and pushes the aks-scaler:latest image. The "." at the end of the command sets the location of the Dockerfile, in this case, the current directory.
 
 ```
-az acr build --image aks-skaler:latest --registry ${ACR_NAME} --file Dockerfile .
+az acr build --image aks-scaler:latest --registry ${ACR_NAME} --file Dockerfile .
 ```
 
 <!-- az acr build \
-  --image aks-skaler:latest \
+  --image aks-scaler:latest \
   --registry ${ACR_NAME} \
   --build-arg SUBSCRIPTION_ID=${SUBSCRIPTION_ID} \
   --build-arg NODE_POOLS_AMOUNT='{"manualpool2": 5, "manualpool3": 5}' \
@@ -344,8 +344,8 @@ spec:
     spec:
       serviceAccountName: ${SERVICE_ACCOUNT_NAME}
       containers:
-        - image: ${ACR_NAME}.azurecr.io/aks-skaler:latest
-          name: oidc
+        - image: ${ACR_NAME}.azurecr.io/aks-scaler:latest
+          name: aks-scaler
           env:
           - name: SUBSCRIPTION_ID
             value: ${SUBSCRIPTION_ID}
@@ -383,7 +383,7 @@ http://127.0.0.1:5000/scale?config={"manualpool2":2,"manualpool3":2}
 > To use this GitHub Action, you'll need to create the *AZURE_CREDENTIALS* secret in your repository. The *AZURE_CREDENTIALS* secret should contain your Azure service principal credentials in JSON format.
 
 > ###### GitHub Action for Azure Login 
-> [GitHub Action for Azure Login](https://github.com/marketplace/actions/azure-login#github-action-for-azure-login) Authenticate to Azure using OIDC and run your Az CLI or Az PowerShell based actions or scripts. github.com/Azure/Actions.
+> [GitHub Action for Azure Login](https://github.com/marketplace/actions/azure-login#github-action-for-azure-login) Authenticate to Azure using OIDC and run your Az CLI or Az PowerShell-based actions or scripts. github.com/Azure/Actions.
 > With the [Azure Login](https://github.com/Azure/login/blob/master/action.yml) Action, you can do an Azure login using [Azure Managed Identities and Azure service principal](https://github.com/Azure/login/blob/master/action.yml) to run Az CLI and Azure PowerShell scripts.
 > `creds`: The parameter ***`creds`*** takes the Azure service principal created in the particular cloud to connect (Refer to the [Configure a service principal with a secret](https://github.com/marketplace/actions/azure-login#configure-a-service-principal-with-a-secret) section below for details).
 > ```
@@ -403,8 +403,8 @@ You can use multiple Kubernetes actions to deploy to containers from Azure Conta
 
 | GitHub Action             | Description  | More details  |
 |---|---|---|
-| actions/checkout@v3       | This action checks-out your repository under $GITHUB_WORKSPACE, so your workflow can access it.  | [Marketplace actions: checkout](https://github.com/marketplace/actions/checkout)   |
-| azure/login@v1            | Logs-in with the Azure CLI and sets up the GitHub Actions runner environment for Azure CLI.  | [Use GitHub Actions to connect to Azure](https://learn.microsoft.com/en-us/azure/developer/github/connect-from-azure?tabs=azure-portal%2Clinux)  |
+| actions/checkout@v3       | This action checks out your repository under $GITHUB_WORKSPACE, so your workflow can access it.  | [Marketplace actions: checkout](https://github.com/marketplace/actions/checkout)   |
+| azure/login@v1            | Logs-in with the Azure CLI and set up the GitHub Actions runner environment for Azure CLI.  | [Use GitHub Actions to connect to Azure](https://learn.microsoft.com/en-us/azure/developer/github/connect-from-azure?tabs=azure-portal%2Clinux)  |
 | azure/aks-set-context@v3  | Set the target AKS cluster context for other actions to use or run any kubectl commands.   | [azure/aks-set-context](https://github.com/Azure/aks-set-context)  |
 | azure/setup-kubectl@v3    | Install a specific version of kubectl on the runner.  | [azure/setup-kubectl](https://github.com/Azure/setup-kubectl)  |
 | Azure/k8s-deploy@v4       | Deploy manifests to Kubernetes clusters.  | [	azure/setup-kubectl](https://github.com/Azure/setup-kubectl)   |
@@ -413,11 +413,11 @@ You can use multiple Kubernetes actions to deploy to containers from Azure Conta
 #### Set repository secrets
 
 
-1. **Get the *AZURE_CREDENTIALS* value**, We will create a service principal and configure its access to Azure resources using the [az ad sp create-for-rbac](https://learn.microsoft.com/en-us/cli/azure/ad/sp?view=azure-cli-latest#az-ad-sp-create-for-rbac()) which creates a [service principle object](https://learn.microsoft.com/en-us/azure/active-directory/develop/app-objects-and-service-principals?tabs=azure-cli) that can access Azure resources (Azure App Registration).
-The output includes credentials that you must protect. Be sure that you do not include these credentials in your code or check the credentials into your source control. As an alternative, consider using managed identities if available to avoid the need to use credentials.  
+1. **Get the *AZURE_CREDENTIALS* value**, We will create a service principal and configure its access to Azure resources using the [az ad sp create-for-rbac](https://learn.microsoft.com/en-us/cli/azure/ad/sp?view=azure-cli-latest#az-ad-sp-create-for-rbac()) which creates a [service principal object](https://learn.microsoft.com/en-us/azure/active-directory/develop/app-objects-and-service-principals?tabs=azure-cli) that can access Azure resources (Azure App Registration).
+The output includes credentials that you must protect. Be sure that you do not include these credentials in your code or check the credentials in your source control. As an alternative, consider using managed identities if available to avoid the need to use credentials.  
 
 ```
-# create entity on the resource group level
+# create an entity on the resource group level
 az ad sp create-for-rbac --name aks-scaler --role contributor --scopes /subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP} --json-auth
 ```
 
@@ -474,11 +474,11 @@ az ad sp create-for-rbac --name aks-scaler --role contributor --scopes /subscrip
 2. Now you can create these secrets in your repository by going to the "Settings" tab, clicking on "Secrets", and then clicking on "New repository secret".
 To create the *AZURE_CREDENTIALS* secret in your GitHub repository, you can follow these steps:
      1. Open your GitHub repository in a web browser.
-     2. Go to "Settings -> Secrets and variables -> Actions" tab.
+     2. Go to "Settings -> Secrets and Variables -> Actions" tab.
      3. Click on "New repository secret".
      4. In the "Name" field, enter the name of the setting: *AZURE_CREDENTIALS*.
      5. In the "Value" field, paste the contents of your Azure service principal credentials JSON (as shown in the output above).
-     6. Click on "Add secret" to complete the operataion.
+     6. Click on "Add secret" to complete the operation.
      7. **repeat 1-6 steps for the *KUBECONFIG* secret.**
 
 ![GitHub Secrets](assets/github-secrets.png)
@@ -489,16 +489,16 @@ To create the *AZURE_CREDENTIALS* secret in your GitHub repository, you can foll
 GitHub Action Variables, GitHub sets default variables for each GitHub Actions workflow run. You can also set custom variables for use in a single workflow or multiple workflows.
 > Variables provide a way to store and reuse non-sensitive configuration information. You can store any configuration data such as compiler flags, usernames, or server names as variables. Variables are interpolated on the runner machine that runs your workflow. Commands that run in actions or workflow steps can create, read, and modify variables.
 
-Variables can be accessed using the *vars* kewords, e.g ***vars.RESOURCE_GROUP***, complete exsample in the action (workflow) file [main.yaml](https://github.com/eladtpro/azure-aks-scaler/blob/main/.github/workflows/main.yml)
+Variables can be accessed using the *vars* keyword, e.g ***vars.RESOURCE_GROUP***, complete example in the action (workflow) file [main.yaml](https://github.com/eladtpro/azure-aks-scaler/blob/main/.github/workflows/main.yml)
 ![AKS Scaling](assets/github-repo-vars.png)
 
 #### Run the workflow
 
-After setting the secrets and environment variabls as listed above on your cloned GitHub repository, all left is running the workflow in order to deploy the scaler on your azure environment.
+After setting the secrets and environment variables as listed above on your cloned GitHub repository, all left is running the workflow to deploy the scaler on your Azure environment.
 
 There are two ways to trigger the workflow, the first and simple is to push changes to the main branch.
 
-The second is running the workflow manualy, follow the instructions bellow,  
+The second is running the workflow manually, follow the instructions below,  
 For more information about configuring the workflow events, see [Events that trigger workflows](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#workflow_dispatch):
 
 1. On GitHub.com, navigate to the main page of the repository.
@@ -508,7 +508,7 @@ For more information about configuring the workflow events, see [Events that tri
 ![Select workflow](assets/actions-select-workflow-2022.webp)
 4. Above the list of workflow runs, click the Run workflow button.
 ![Run workflow](assets/actions-workflow-dispatch.webp)
-5. Select the **Branch** dropdown menu and click a branch to run the workflow on.
+5. Select the **Branch** dropdown menu and click a branch to run the workflow.
 6. Click Run workflow.
 
 
@@ -533,7 +533,7 @@ Deploy the workload and verify authentication with the workload identity.</sub>
 <sub>Azure Kubernetes Service (AKS) clusters require an identity to access Azure resources like load balancers and managed disks. This identity can be a managed identity or service principal. A system-assigned managed identity is automatically created when you create an AKS cluster. This identity is managed by the Azure platform and doesn't require you to provision or rotate any secrets. For more information about managed identities in Azure AD, see [Managed identities for Azure resources](https://learn.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview).</sub>
 
 [Authenticate with Azure Container Registry (ACR) from Azure Kubernetes Service (AKS)](https://learn.microsoft.com/en-us/azure/aks/cluster-container-registry-integration?tabs=azure-cli)
-<sub>When using [Azure Container Registry (ACR)](https://learn.microsoft.com/en-us/azure/container-registry/container-registry-intro) with Azure Kubernetes Service (AKS), you need to establish an authentication mechanism. You can configure the required permissions between ACR and AKS using the Azure CLI, Azure PowerShell, or Azure portal. This article provides examples to configure authentication between these Azure services using the Azure CLI or Azure PowerShell.</sub>
+<sub>When using [Azure Container Registry (ACR)](https://learn.microsoft.com/en-us/azure/container-registry/container-registry-intro) with Azure Kubernetes Service (AKS), you need to establish an authentication mechanism. You can configure the required permissions between ACR and AKS using the Azure CLI, Azure PowerShell, or Azure portal. This article provides examples of configuring authentication between these Azure services using the Azure CLI or Azure PowerShell.</sub>
 
 ---  
 
@@ -543,21 +543,21 @@ Deploy the workload and verify authentication with the workload identity.</sub>
 <sub>This page shows how to securely inject sensitive data, such as passwords and encryption keys, into Pods.</sub>
 
 [ServiceAccount token volume projection](https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/#serviceaccount-token-volume-projection)  
-<sub>The kubelet can also project a ServiceAccount token into a Pod. You can specify desired properties of the token, such as the audience and the validity duration. These properties are not configurable on the default ServiceAccount token. The token will also become invalid against the API when either the Pod or the ServiceAccount is deleted.</sub>
+<sub>The kubelet can also project a ServiceAccount token into a Pod. You can specify the desired properties of the token, such as the audience and the validity duration. These properties are not configurable on the default ServiceAccount token. The token will also become invalid against the API when either the Pod or the ServiceAccount is deleted.</sub>
 
 ---  
 
 ##### Identity (Azure)  
 
 [Use Azure AD workload identity with Azure Kubernetes Service (AKS)](https://learn.microsoft.com/en-us/azure/aks/workload-identity-overview?tabs=python)  
-<sub>Workloads deployed on an Azure Kubernetes Services (AKS) cluster require Azure Active Directory (Azure AD) application credentials or managed identities to access Azure AD protected resources, such as Azure Key Vault and Microsoft Graph. Azure AD workload identity integrates with the capabilities native to Kubernetes to federate with external identity providers.</sub>
+<sub>Workloads deployed on an Azure Kubernetes Services (AKS) cluster require Azure Active Directory (Azure AD) application credentials or managed identities to access Azure AD-protected resources, such as Azure Key Vault and Microsoft Graph. Azure AD workload identity integrates with the capabilities native to Kubernetes to federate with external identity providers.</sub>
 
 [What are workload identities?](https://learn.microsoft.com/en-us/azure/active-directory/workload-identities/workload-identities-overview)  
-<sub>A workload identity is an identity you assign to a software workload (such as an application, service, script, or container) to authenticate and access other services and resources. The terminology is inconsistent across the industry, but generally a workload identity is something you need for your software entity to authenticate with some system. For example, in order for GitHub Actions to access Azure subscriptions the action needs a workload identity which has access to those subscriptions. A workload identity could also be an AWS service role attached to an EC2 instance with read-only access to an Amazon S3 bucket.
+<sub>A workload identity is an identity you assign to a software workload (such as an application, service, script, or container) to authenticate and access other services and resources. The terminology is inconsistent across the industry, but generally, a workload identity is something you need for your software entity to authenticate with some system. For example, for GitHub Actions to access Azure subscriptions the action needs a workload identity that has access to those subscriptions. A workload identity could also be an AWS service role attached to an EC2 instance with read-only access to an Amazon S3 bucket.
 In Microsoft Entra, workload identities are applications, service principals, and managed identities.</sub>
 
 [Assign a managed identity access to a resource using Azure CLI](https://learn.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/howto-assign-access-cli#next-steps)  
-<sub>Managed identities for Azure resources is a feature of Azure Active Directory. Each of the [Azure services that support managed identities for Azure resources](https://learn.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/services-support-managed-identities) are subject to their own timeline. Make sure you review the [availability](https://learn.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/services-support-managed-identities) status of managed identities for your resource and [known issues](https://learn.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/known-issues) before you begin.</sub>
+<sub>Managed identities for Azure resources is a feature of Azure Active Directory. Each of the [Azure services that support managed identities for Azure resources](https://learn.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/services-support-managed-identities) are subject to its timeline. Make sure you review the [availability](https://learn.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/services-support-managed-identities) status of managed identities for your resource and [known issues](https://learn.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/known-issues) before you begin.</sub>
 
 [Create a Microsoft Entra application and service principal that can access resources](https://learn.microsoft.com/en-us/azure/active-directory/develop/howto-create-service-principal-portal)
 <sub>In this article, you'll learn how to create a Microsoft Entra application and service principal that can be used with the role-based access control. When you register a new application in Microsoft Entra ID, a service principal is automatically created for the app registration. The service principal is the app's identity in the Microsoft Entra tenant. Access to resources is restricted by the roles assigned to the service principal, giving you control over which resources can be accessed and at which level. For security reasons, it's always recommended to use service principals with automated tools rather than allowing them to sign in with a user identity.</sub>
@@ -593,7 +593,7 @@ To use Azure PowerShell or Azure CLI in a GitHub Actions workflow, you need to f
 <sub>With [GitHub Actions for Azure](https://github.com/Azure/actions/), you can create workflows that you can set up in your repository to build, test, package, release and deploy to Azure.</sub>
 
 [GitHub Actions for Azure](https://github.com/Azure/actions/)
-<sub>This repository provides a framework, guidelines and processes to author new and contribute to existing [GitHub Actions deploying to Azure](https://azure.github.io/actions/).</sub>
+<sub>This repository provides a framework, guidelines, and processes to author new and contribute to existing [GitHub Actions deploying to Azure](https://azure.github.io/actions/).</sub>
 
 ---
 

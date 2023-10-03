@@ -17,7 +17,7 @@ spec:
     spec:
       serviceAccountName: workload-identity-sa # HACK: should be replaced in helm values files ${{vars.SERVICE_ACCOUNT_NAMESPACE}}
       containers:
-        - image: acr4aksregistry.azurecr.io/aks-skaler:latest # HACK: should be replaced in helm values files ${{vars.CONTAINER_REGISTRY}}
+        - image: acr4aksregistry.azurecr.io/aks-scaler:latest # HACK: should be replaced in helm values files ${{vars.CONTAINER_REGISTRY}}
           name: oidc
           env:
           - name: AZURE_TENANT_ID
