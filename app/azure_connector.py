@@ -1,9 +1,11 @@
+import json
 import os
 from azure.mgmt.containerservice import ContainerServiceClient
 from azure.identity import ManagedIdentityCredential, DefaultAzureCredential
 
 from cloud_connectors import _CloudConnector
 from config import AzureConfig
+from pool import Pool, PoolEncoder
 
 
 class _AzureConnector(_CloudConnector):
@@ -27,12 +29,14 @@ class _AzureConnector(_CloudConnector):
         return creds
     
     def list_node_pools(self):
+        pools = []
         node_pools = self._aks_client.agent_pools.list(AzureConfig.RESOURCE_GROUP, AzureConfig.CLUSTER_NAME)
-        for pool in node_pools:
-            print(pool.name)
-            print(pool.count)
+        for aks_pool in node_pools:
+            pool = Pool(aks_pool.name, aks_pool.count, aks_pool.mode, aks_pool.type, aks_pool.os_type, aks_pool.vm_size)
+            pools.append(pool)
+            print(pool)
 
-        # return {pool.name: pool.properties.count for pool in node_pools}
+        return json.dumps(pools, cls=PoolEncoder)
 
     def scale_node_pools(self, node_pools_amount: dict = AzureConfig.NODE_POOLS_AMOUNT):
         for node_name, count in node_pools_amount.items():
