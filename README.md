@@ -14,6 +14,7 @@
 | &nbsp;&nbsp;&nbsp;&nbsp;[Establish federated identity credential](#fifth)  
 | &nbsp;&nbsp;&nbsp;&nbsp;[Prepare the container image](#sixth)  
 | &nbsp;&nbsp;&nbsp;&nbsp;[Deploy the workload (CLI)](#seventh)  
+| &nbsp;&nbsp;&nbsp;&nbsp;[Test the app](#test)  
 | &nbsp;&nbsp;&nbsp;&nbsp;[Local Development](#local)  
 | &nbsp;&nbsp;&nbsp;&nbsp;[Deploy the workload (GitHub Actions)](#github)  
 

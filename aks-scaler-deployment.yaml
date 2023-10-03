@@ -62,3 +62,35 @@ spec:
                 key: cluster-name
       nodeSelector:
         kubernetes.io/os: linux
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: aks-scaler-service
+spec:
+  type: NodePort
+  selector:
+    app: aks-scaler
+  ports:
+  - name: http
+    port: 80
+    targetPort: 8080
+
+# apiVersion: networking.k8s.io/v1
+# kind: Ingress
+# metadata:
+#   name: aks-scaler-ingress
+#   annotations:
+#     nginx.ingress.kubernetes.io/rewrite-target: /$1
+# spec:
+#   rules:
+#   - host: cluster-url
+#     http:
+#       paths:
+#       - path: /scale(/|$)(.*)
+#         pathType: Prefix
+#         backend:
+#           service:
+#             name: aks-scaler-service
+#             port:
+#               name: http
