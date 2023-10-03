@@ -91,7 +91,7 @@ export CLUSTER_NAME="myManagedCluster" \
 export NODE_POOLS_AMOUNT="{ \"manualpool2\": 5, \"manualpool3\": 5 }"
 ```
 
-###### Azure Python SDK Variables:  
+###### Azure Python SDK Variables (Local Development):  
 
 ```
 export AZURE_TENANT_ID=$(az account show --query tenantId -otsv) \
