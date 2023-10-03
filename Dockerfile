@@ -29,7 +29,7 @@ RUN pip install --trusted-host pypi.python.org --upgrade pip -r requirements.txt
 # CMD ["python", "app/main.py"]
 
 # Set the FLASK_APP environment variable
-ENV FLASK_APP=app
+ENV FLASK_APP=app.py
 
 # Run the Flask application when the container launches
 CMD [ "python3", "-m" , "flask", "run", "--host=0.0.0.0"]
