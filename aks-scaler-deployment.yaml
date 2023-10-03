@@ -70,7 +70,7 @@ kind: Service
 metadata:
   name: aks-scaler-service
 spec:
-  type: NodePort
+  type: LoadBalancer
   selector:
     app: aks-scaler
   ports:
