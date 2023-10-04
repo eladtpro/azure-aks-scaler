@@ -349,18 +349,64 @@ spec:
         - image: ${ACR_NAME}.azurecr.io/aks-scaler:latest
           name: aks-scaler
           env:
+          - name: AZURE_TENANT_ID
+            valueFrom:
+              secretKeyRef:
+                name: aks-scaler-secret
+                key: tenant
+          - name: AZURE_CLIENT_ID
+            valueFrom:
+              secretKeyRef:
+                name: aks-scaler-secret
+                key: client-id
+          - name: AZURE_CLIENT_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: aks-scaler-secret
+                key: client-secret
           - name: SUBSCRIPTION_ID
-            value: ${SUBSCRIPTION_ID}
+            valueFrom:
+              secretKeyRef:
+                name: aks-scaler-secret
+                key: subscription
           - name: NODE_POOLS_AMOUNT
-            value: "{ \"manualpool2\": 5, \"manualpool3\": 5 }"
+            valueFrom:
+              configMapKeyRef:
+                name: aks-scaler-configmap
+                key: node-pools-amount
           - name: RESOURCE_GROUP
-            value: ${RESOURCE_GROUP}
+            valueFrom:
+              configMapKeyRef:
+                name: aks-scaler-configmap
+                key: resource-group
           - name: LOCATION
-            value: ${LOCATION}
+            valueFrom:
+              configMapKeyRef:
+                name: aks-scaler-configmap
+                key: location
           - name: CLUSTER_NAME
-            value: ${CLUSTER_NAME}
+            valueFrom:
+              configMapKeyRef:
+                name: aks-scaler-configmap
+                key: cluster-name
       nodeSelector:
         kubernetes.io/os: linux
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: aks-scaler-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: aks-scaler
+  ports:
+  - name: http
+    port: 80
+    targetPort: 8080
+
 
 EOF
 ```

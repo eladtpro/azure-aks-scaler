@@ -20,7 +20,7 @@ jobs:
             creds: ${{ secrets.AZURE_CREDENTIALS }}
         - name: acr login
           run: az acr login --name ${{ vars.CONTAINER_REGISTRY }} --expose-token
-        - name: Build and push checkout image to ACR (${{ vars.CONTAINER_REGISTRY }})
+        - name: Build and push aks-scaler image to ACR (${{ vars.CONTAINER_REGISTRY }})
           run: az acr build --image aks-scaler:latest --registry ${{ vars.CONTAINER_REGISTRY }} --file Dockerfile .
 
   deployToAKS:

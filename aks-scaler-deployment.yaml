@@ -18,7 +18,7 @@ spec:
       serviceAccountName: workload-identity-sa # HACK: should be replaced in helm values files ${{vars.SERVICE_ACCOUNT_NAMESPACE}}
       containers:
         - image: acr4aksregistry.azurecr.io/aks-scaler:latest # HACK: should be replaced in helm values files ${{vars.CONTAINER_REGISTRY}}
-          name: oidc
+          name: aks-scaler
           env:
           - name: AZURE_TENANT_ID
             valueFrom:
@@ -77,22 +77,3 @@ spec:
   - name: http
     port: 80
     targetPort: 8080
-
-# apiVersion: networking.k8s.io/v1
-# kind: Ingress
-# metadata:
-#   name: aks-scaler-ingress
-#   annotations:
-#     nginx.ingress.kubernetes.io/rewrite-target: /$1
-# spec:
-#   rules:
-#   - host: cluster-url
-#     http:
-#       paths:
-#       - path: /scale(/|$)(.*)
-#         pathType: Prefix
-#         backend:
-#           service:
-#             name: aks-scaler-service
-#             port:
-#               name: http
