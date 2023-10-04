@@ -8,6 +8,7 @@ app = Flask(__name__)
 # @app.route('/', methods=['GET'])
 @app.route('/scale', methods=['GET'])
 def scale():
+    print(f'scaling to config: {scale_config}')
     scale_config = None
     args = request.args.get('config')
     if args is not None:

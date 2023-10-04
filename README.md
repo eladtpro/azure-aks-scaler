@@ -33,7 +33,7 @@ In this security model, the AKS cluster acts as a token issuer, Azure Active Dir
 
 [![AKS Workload Identity Overview](assets/aks-workload-identity-model.png)](https://learn.microsoft.com/en-us/azure/aks/workload-identity-overview?tabs=python)  
 
-##Preps
+## Preps
 
 ###### Login to Azure    
 
