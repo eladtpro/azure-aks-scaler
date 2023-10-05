@@ -50,7 +50,7 @@ Lastly, we have the identity as ***Application*** (App Registration) of the GitH
 
 | Aim | Kind | Role  | Scope  | Variable /Name     |
 |---|---|---|---|---|
-| [AKS pod Workload Identity](#third) | Managed Identity  service principal | Azure Kubernetes Service RBAC Cluster Admin | AKS Cluster    | *ASSIGNED_MANAGED_IDENTITY_NAME* |
+| [AKS pod Workload Identity](#third) | Managed Identity  service principal, user assigned identity| Azure Kubernetes Service RBAC Cluster Admin | AKS Cluster    | *ASSIGNED_MANAGED_IDENTITY_NAME* |
 | [GitHub Actions](#github)             | Application service principal       | Contributor                                 | Resource Group | *AZURE_CREDENTIALS* |
 | [Local Development](#local)          | Application service principal       | Azure Kubernetes Service RBAC Cluster Admin | AKS Cluster    | *aks-scaler* |
 

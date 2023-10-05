@@ -3,14 +3,12 @@ import os
 from azure.mgmt.containerservice import ContainerServiceClient
 from azure.identity import ManagedIdentityCredential, DefaultAzureCredential
 
-from cloud_connectors import _CloudConnector
 from config import AzureConfig
 from pool import Pool, PoolEncoder
 
 
-class _AzureConnector(_CloudConnector):
+class AzureConnector:
     def __init__(self) -> None:
-        super().__init__()
         self._aks_client: ContainerServiceClient = self.__connect_to_cluster()
 
     @staticmethod
@@ -19,13 +17,14 @@ class _AzureConnector(_CloudConnector):
             # Running in AKS container
             creds = ContainerServiceClient(
             ManagedIdentityCredential(client_id=AzureConfig.AZURE_MANAGED_CLIENT_ID), AzureConfig.SUBSCRIPTION_ID)
+
+            print(f'running at managed identity: {AzureConfig.AZURE_MANAGED_CLIENT_ID}')
         else:
             # Running locally
             creds = ContainerServiceClient(
-            DefaultAzureCredential(), AzureConfig.SUBSCRIPTION_ID
-        )
+            DefaultAzureCredential(), AzureConfig.SUBSCRIPTION_ID)
 
-
+            print(f'running at default azure credential: {AzureConfig.SUBSCRIPTION_ID}, client_id: {AzureConfig.AZURE_MANAGED_CLIENT_ID}')
         return creds
     
     def list_node_pools(self):
