@@ -3,9 +3,14 @@ from azure.mgmt.containerservice import ContainerServiceClient
 from azure_connector import _AzureConnector
 import json
 
+
 app = Flask(__name__)
 
-# @app.route('/', methods=['GET'])
+@app.route('/', methods=['GET'])
+@app.route('/test', methods=['GET'])
+def test():
+    return 'Hello World!'
+
 @app.route('/scale', methods=['GET'])
 def scale():
     print(f'scaling to config: {scale_config}')
