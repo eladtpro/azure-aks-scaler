@@ -18,7 +18,7 @@ class _AzureConnector(_CloudConnector):
         if "KUBERNETES_SERVICE_HOST" in os.environ:
             # Running in AKS container
             creds = ContainerServiceClient(
-            ManagedIdentityCredential(client_id=AzureConfig.AZURE_CLIENT_ID), AzureConfig.SUBSCRIPTION_ID)
+            ManagedIdentityCredential(client_id=AzureConfig.AZURE_MANAGED_CLIENT_ID), AzureConfig.SUBSCRIPTION_ID)
         else:
             # Running locally
             creds = ContainerServiceClient(

@@ -25,6 +25,11 @@ spec:
               secretKeyRef:
                 name: aks-scaler-secret
                 key: tenant
+          - name: AZURE_MANAGED_CLIENT_ID
+            valueFrom:
+              secretKeyRef:
+                name: aks-scaler-secret
+                key: managed-client-id
           - name: AZURE_CLIENT_ID
             valueFrom:
               secretKeyRef:

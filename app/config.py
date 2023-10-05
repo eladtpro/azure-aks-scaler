@@ -42,3 +42,9 @@ class AzureConfig:
     def AZURE_CLIENT_ID(cls):
         # Get the value of the CLIENT_ID environment variable
         return os.getenv("AZURE_CLIENT_ID")
+    
+    @classmethod
+    @property
+    def AZURE_MANAGED_CLIENT_ID(cls):
+        # Get the value of the CLIENT_ID environment variable
+        return os.getenv("AZURE_MANAGED_CLIENT_ID")
