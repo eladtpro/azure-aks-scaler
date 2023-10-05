@@ -22,6 +22,8 @@ jobs:
           run: az acr login --name ${{ vars.CONTAINER_REGISTRY }} --expose-token
         - name: Build and push aks-scaler image to ACR (${{ vars.CONTAINER_REGISTRY }})
           run: az acr build --image aks-scaler:latest --registry ${{ vars.CONTAINER_REGISTRY }} --file Dockerfile .
+        - name: add tag to aks-scaler image
+          run: az acr import --name ${{ vars.CONTAINER_REGISTRY }} --source ${{ vars.CONTAINER_REGISTRY }}.azurecr.io/aks-scaler:latest --image aks-scaler:${{ github.sha }} --force
 
   deployToAKS:
     needs: checkoutAndBuildImage
