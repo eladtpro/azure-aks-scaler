@@ -13,13 +13,14 @@ def test():
 
 @app.route('/scale', methods=['GET'])
 def scale():
-    print(f'scaling to config: {scale_config}')
+    print(f'scale called')
     scale_config = None
     args = request.args.get('config')
     if args is not None:
         scale_config = json.loads(args)
+    print(f'scaling to config: {scale_config}')
     azure_connector: _AzureConnector = _AzureConnector()
-    print(f'scaling to config: {scale_config}, agent_pools: {azure_connector.list_node_pools()}')
+    print(f'execute scale_node_pools: {scale_config}, agent_pools: {azure_connector.list_node_pools()}')
     amount = azure_connector.scale_node_pools(scale_config)
     
     return f'Scaled to: {amount}'
