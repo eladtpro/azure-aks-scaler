@@ -30,6 +30,11 @@ spec:
               secretKeyRef:
                 name: aks-scaler-secret
                 key: managed-client-id
+          - name: APPLICATIONINSIGHTS_CONNECTION_STRING
+            valueFrom:
+              secretKeyRef:
+                name: aks-scaler-secret
+                key: app-insights-connection-string
           - name: AZURE_CLIENT_ID
             valueFrom:
               secretKeyRef:

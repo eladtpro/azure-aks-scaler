@@ -668,6 +668,9 @@ To use Azure PowerShell or Azure CLI in a GitHub Actions workflow, you need to f
 [Microsoft Azure SDK for Python](https://learn.microsoft.com/en-us/python/api/overview/azure/mgmt-containerservice-readme?view=azure-python)
 <sub>This is the Microsoft Azure Container Service Management Client Library. This package has been tested with Python 3.7+. For a more complete view of Azure libraries, see the [azure sdk python release](https://aka.ms/azsdk/python/all).</sub>
 
+[Set up Azure Monitor for your Python application](https://learn.microsoft.com/en-us/previous-versions/azure/azure-monitor/app/opencensus-python)
+<sub>[OpenCensus](https://opencensus.io/) is a set of open-source libraries to allow collection of distributed tracing, metrics, and logging telemetry. By using [Azure Monitor exporters](https://github.com/census-instrumentation/opencensus-python/tree/master/contrib/opencensus-ext-azure), you can send this collected telemetry to Application Insights. This article walks you through the process of setting up OpenCensus and Azure Monitor exporters for Python to send your monitoring data to Azure Monitor.</sub>
+
 ##### Tooling  
 
 [VALIDKUBE](https://validkube.com/)  

@@ -70,6 +70,7 @@ jobs:
                 --from-literal=client-secret='${{ secrets.AZURE_CLIENT_SECRET }}' \
                 --from-literal=subscription='${{ secrets.SUBSCRIPTION_ID }}' \
                 --from-literal=managed-client-id='${{ secrets.AZURE_MANAGED_CLIENT_ID }}' \
+                --from-literal=app-insights-connection-string='${{ secrets.APPLICATIONINSIGHTS_CONNECTION_STRING }}' \
                 --namespace=${{ vars.SERVICE_ACCOUNT_NAMESPACE }}
             fi
 

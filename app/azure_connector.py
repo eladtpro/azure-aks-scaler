@@ -8,15 +8,16 @@ from pool import Pool, PoolEncoder
 
 
 class AzureConnector:
-    def __init__(self) -> None:
-        self._aks_client: ContainerServiceClient = self.__connect_to_cluster()
+    def __init__(self, managed=True, req_client_id=None) -> None:
+        self._aks_client: ContainerServiceClient = self.__connect_to_cluster(managed, req_client_id)
 
     @staticmethod
-    def __connect_to_cluster():
-        if "KUBERNETES_SERVICE_HOST" in os.environ:
+    def __connect_to_cluster(managed=True, req_client_id=None):
+        if "KUBERNETES_SERVICE_HOST" in os.environ and managed:
             # Running in AKS container
+            client_id = req_client_id or AzureConfig.AZURE_MANAGED_CLIENT_ID 
             creds = ContainerServiceClient(
-            ManagedIdentityCredential(client_id=AzureConfig.AZURE_MANAGED_CLIENT_ID), AzureConfig.SUBSCRIPTION_ID)
+            ManagedIdentityCredential(client_id=client_id), AzureConfig.SUBSCRIPTION_ID)
 
             print(f'running at managed identity: {AzureConfig.AZURE_MANAGED_CLIENT_ID}')
         else:
