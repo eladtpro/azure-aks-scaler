@@ -16,7 +16,9 @@ def test():
 
 @app.route('/list', methods=['GET'])
 def list():
-    azure_connector: AzureConnector = AzureConnector()
+    print(f'list called')
+    config, managed, client_id = get_request_args()
+    azure_connector: AzureConnector = AzureConnector(managed, client_id)
     return azure_connector.list_node_pools()
 
 @app.route('/scale', methods=['GET'])
@@ -51,6 +53,9 @@ def get_request_args():
 if __name__ == '__main__': # file is run directly and not imported
     if "KUBERNETES_SERVICE_HOST" in os.environ:
         # Running in AKS container
+        print('running on AKS')
         app.run(debug=False, host='0.0.0.0')
     else:
+        # Running locally
+        print('running locally')
         app.run(debug=False, port=8080, host='0.0.0.0')
