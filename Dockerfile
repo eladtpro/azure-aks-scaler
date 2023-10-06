@@ -30,7 +30,7 @@ RUN pip install --trusted-host pypi.python.org --upgrade pip -r requirements.txt
 
 # Set the FLASK_APP environment variable
 ENV FLASK_APP=app.py
-ENV PYTHONUNBUFFERED=1
+ENV PYTHONUNBUFFERED=0
 
 EXPOSE 5000
 # Run the Flask application when the container launches
