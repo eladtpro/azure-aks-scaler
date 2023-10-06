@@ -54,7 +54,3 @@ if __name__ == '__main__': # file is run directly and not imported
         app.run(debug=False, host='0.0.0.0')
     else:
         app.run(debug=False, port=8080, host='0.0.0.0')
-
-# app = create_app()
-# app = Flask(__name__)
-# app.run(debug=True)
