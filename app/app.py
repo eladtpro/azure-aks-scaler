@@ -32,6 +32,14 @@ def scale():
     
     return f'Scaled to: {amount}'
 
+@app.errorhandler(404)
+def page_not_found(e):
+    return "The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.", 404
+
+def request_tostring(request):
+    return f'{request.method} {request.url} {request.args}'
+
+
 def get_request_args():
     config = None
     managed = True

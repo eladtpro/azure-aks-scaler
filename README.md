@@ -3,20 +3,33 @@
 # Azure Kubernetes Service (AKS) *Workload Identity* Walkthrough
 > Azure Kubernetes Service (AKS) Workload Identity is a feature that allows Kubernetes pods to authenticate with Azure services using their own identities, instead of using a service principal. This provides a more secure and streamlined way to access Azure resources from within a Kubernetes cluster.  
 >
+In th
 
 ## In this article
 | &nbsp;&nbsp;&nbsp;&nbsp;[How does Workload Identity work](#how)  
-| &nbsp;&nbsp;&nbsp;&nbsp;[Identities](#ids)  
-| &nbsp;&nbsp;&nbsp;&nbsp;[Initialize Variables](#first)  
-| &nbsp;&nbsp;&nbsp;&nbsp;[Enable OpenID Connect (OIDC) provider on existing AKS cluster](#second)  
-| &nbsp;&nbsp;&nbsp;&nbsp;[Create a managed identity and grant permissions to access the AKS control plane](#third)  
-| &nbsp;&nbsp;&nbsp;&nbsp;[Create a Kubernetes service account](#forth)  
-| &nbsp;&nbsp;&nbsp;&nbsp;[Establish federated identity credential](#fifth)  
-| &nbsp;&nbsp;&nbsp;&nbsp;[Prepare the container image](#sixth)  
-| &nbsp;&nbsp;&nbsp;&nbsp;[Deploy the workload (CLI)](#seventh)  
-| &nbsp;&nbsp;&nbsp;&nbsp;[Test the app](#test)  
+| &nbsp;&nbsp;&nbsp;&nbsp;[**Part 1. Preps**](#ids)  
+| &nbsp;&nbsp;&nbsp;&nbsp;<sub>Link </sub>
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[Identities](#ids)  
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[Initialize Variables](#first)  
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[Enable OpenID Connect (OIDC) provider on existing AKS cluster](#second)  
+| &nbsp;&nbsp;&nbsp;&nbsp;[**Part 2. Federated Identity**](#third)  
+| &nbsp;&nbsp;&nbsp;&nbsp;<sub>Link [Kubernetes Service Account](https://kubernetes.io/docs/concepts/security/service-accounts/) with [Azure Managed Identity](https://learn.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview) by using [Azure Active Directory Federated Identities](https://learn.microsoft.com/en-us/graph/api/resources/federatedidentitycredentials-overview?view=graph-rest-1.0)</sub>
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[Create a managed identity and grant permissions to access the AKS control plane](#third)  
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[Create a Kubernetes service account](#forth)  
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[Establish federated identity credential](#fifth)  
+| &nbsp;&nbsp;&nbsp;&nbsp;[**Part 3. Containers**](#sixth)  
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[Prepare the container image](#sixth)  
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[Deploy the workload (CLI)](#seventh)  
+| &nbsp;&nbsp;&nbsp;&nbsp;[**Part 4. Running**](#test)  
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[Test the app](#test)  
 | &nbsp;&nbsp;&nbsp;&nbsp;[Local Development](#local)  
 | &nbsp;&nbsp;&nbsp;&nbsp;[Deploy the workload (GitHub Actions)](#github)  
+
+
+Our mission is to empower every person and every organization on the planet to achieve more.
+
+
+Empower every person on the planet to achieve more
 
 
 ##### Prerequisites
